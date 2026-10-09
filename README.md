@@ -13,6 +13,8 @@ Notification access does not provide complete access to private chats or inboxes
 
 ## Status
 
+Sentinel 0.7.1 adds visible foreground background protection, safe replacement of detected source notifications and clearer warning copy. The user confirmed live SMS detection after removing the app from Recents. See [background verification and limits](docs/background-protection.md).
+
 The local 0.7.0 hardening update adds broader English scam combinations, historical exact-URL evidence from the supplied Kaggle dataset, reduced warnings for ordinary HTTP/IP destinations, and notification extraction/reconnection fixes. See [hardening scope and limitations](docs/detection-hardening.md). Historical dataset matches are not live reputation, and missing matches never prove safety. Phone regressions can use `-PisolatedValidation=true` to install Sentinel Preview separately and preserve an existing installation's encrypted history.
 
 Stages 1–6 are complete. Stage 6 adds encrypted opt-in metadata history, deletion/privacy controls and transparent synthetic evaluation, independently accepted at 9/10. Verification: 35 engine tests and 22 Android tests passed on a Vivo Android 13 phone; lint retains 13 warnings. See [Stage 6 review](docs/stage-6-review.md), [privacy design](docs/stage-6-history.md) and [synthetic evaluation](docs/stage-6-evaluation.md). This reaches the team's estimated 75% pre-event readiness milestone.
