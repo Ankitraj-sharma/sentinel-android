@@ -18,6 +18,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import com.phishshield.sentinel.data.Setting
 import com.phishshield.sentinel.data.UserSettings
+import com.phishshield.sentinel.ScanState
 
 private enum class Destination(val label: String, val icon: ImageVector) {
     Protection("Protection", Icons.Outlined.Shield),
@@ -28,7 +29,9 @@ private enum class Destination(val label: String, val icon: ImageVector) {
 
 @Composable
 fun SentinelApp(settings: UserSettings, saveError: Boolean = false,
-    onDismissError: () -> Unit = {}, onSetting: (Setting, Boolean) -> Unit) {
+    onDismissError: () -> Unit = {}, scan: ScanState = ScanState(),
+    onInput: (String) -> Unit = {}, onAnalyse: () -> Unit = {}, onClear: () -> Unit = {},
+    onSetting: (Setting, Boolean) -> Unit) {
     if (!settings.onboardingComplete) {
         Welcome(saveError) { onSetting(Setting.ONBOARDING, true) }
         return
@@ -62,7 +65,7 @@ fun SentinelApp(settings: UserSettings, saveError: Boolean = false,
                 composable(Destination.Protection.name) {
                     Protection { nav.navigate(Destination.Settings.name) { launchSingleTop = true } }
                 }
-                composable(Destination.Scan.name) { Scan() }
+                composable(Destination.Scan.name) { ScanScreen(scan, onInput, onAnalyse, onClear) }
                 composable(Destination.History.name) { History(settings.saveHistory) }
                 composable(Destination.Settings.name) { Settings(settings, onSetting) }
             }
@@ -96,7 +99,7 @@ private fun Welcome(saveError: Boolean, onContinue: () -> Unit) {
             Text("Understand suspicious messages.", style = MaterialTheme.typography.headlineMedium)
             Text("Designed for on-device scam analysis with clear explanations and access you control.",
                 style = MaterialTheme.typography.bodyLarge)
-            Info("Foundation preview", "This build provides navigation and saved preferences. Automatic detection, scanning and warnings are not available yet.")
+            Info("Local analysis preview", "Manually analyse messages and links with explained local rules. Automatic monitoring and QR scanning are not available yet.")
             Text("No message access is requested in this build. Settings stay on this device.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (saveError) Text("Could not save setup. Please try again.",
@@ -115,7 +118,7 @@ private fun Protection(onSettings: () -> Unit) {
                 Icon(Icons.Outlined.Shield, contentDescription = null, Modifier.size(40.dp),
                     tint = MaterialTheme.colorScheme.primary)
                 Text("Protection not active", style = MaterialTheme.typography.headlineSmall)
-                Text("The detection engine and notification listener will be added in the next stages. This build does not monitor messages.")
+                Text("Local message and URL analysis is available in Scan. Automatic notification monitoring is not active in this build.")
                 OutlinedButton(onClick = onSettings) { Text("Configure preferences") }
             }
         }
@@ -130,22 +133,12 @@ private fun Protection(onSettings: () -> Unit) {
 }
 
 @Composable
-private fun Scan() {
-    Page("Scan content", "A fallback when a notification does not contain the full message.") {
-        Info("Scanning is coming soon", "Message, link and QR analysis are not available in this preview. They will share the same on-device analysis engine.")
-        Info("Messages and links", "Paste or share suspicious content for an explained result.")
-        Info("QR destinations", "Inspect a decoded destination before deciding whether to open it.")
-        Text("No content is collected on this screen.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-}
-
-@Composable
 private fun History(enabled: Boolean) {
     Page("Detection history", "A private record, when you choose to keep one.") {
         Icon(Icons.Outlined.History, contentDescription = null, modifier = Modifier.size(48.dp),
             tint = MaterialTheme.colorScheme.primary)
         Text("No detections yet", style = MaterialTheme.typography.titleLarge)
-        Text("Detection is not available in this foundation build. No messages or scan results have been stored.")
+        Text("Manual scans are not saved in this build. No messages or scan results have been stored in history.")
         Info(if (enabled) "History preference enabled" else "History preference disabled",
             "Your preference is saved. Detection history and deletion controls will be available when scanning is enabled.")
     }
@@ -171,7 +164,7 @@ private fun Settings(settings: UserSettings, onSetting: (Setting, Boolean) -> Un
             onSetting(Setting.SAVE_HISTORY, it)
         }
         Info("No network access", "This build has no internet permission, cloud analysis or analytics. Only your preferences are saved locally.")
-        Text("Sentinel 0.1.0 · Stage 1 foundation\nTeam PhishShield", style = MaterialTheme.typography.bodySmall,
+        Text("Sentinel 0.2.0 · Local analysis preview\nTeam PhishShield", style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

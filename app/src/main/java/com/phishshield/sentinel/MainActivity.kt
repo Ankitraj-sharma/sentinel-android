@@ -23,6 +23,7 @@ class MainActivity : ComponentActivity() {
             val model: SentinelViewModel = viewModel()
             val settings by model.settings.collectAsStateWithLifecycle(initialValue = null)
             val saveError by model.saveError.collectAsStateWithLifecycle()
+            val scan by model.scan.collectAsStateWithLifecycle()
             SideEffect {
                 val dark = settings?.darkTheme ?: true
                 enableEdgeToEdge(
@@ -40,7 +41,8 @@ class MainActivity : ComponentActivity() {
                     }
                 } else {
                     SentinelApp(loaded, saveError, onDismissError = model::dismissError,
-                        onSetting = model::set)
+                        scan = scan, onInput = model::updateInput, onAnalyse = model::analyse,
+                        onClear = model::clearScan, onSetting = model::set)
                 }
             }
         }
