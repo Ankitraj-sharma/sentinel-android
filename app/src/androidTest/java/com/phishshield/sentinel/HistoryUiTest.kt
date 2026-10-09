@@ -38,7 +38,7 @@ class HistoryUiTest {
             compose.activityRule.scenario.recreate()
             compose.onNodeWithText("1 / 100 entries · 7-day retention").assertExists()
             compose.onNodeWithText("View saved metadata").performScrollTo().performClick()
-            compose.onNodeWithText("Request to disclose a secret").performScrollTo().assertExists()
+            compose.onNodeWithText("Request to disclose a secret", substring = true).performScrollTo().assertExists()
             compose.onAllNodesWithText("123456", substring = true).assertCountEquals(0)
             compose.onAllNodesWithText("evil.test", substring = true).assertCountEquals(0)
             compose.onNodeWithText("Delete entry").performScrollTo().performClick()
