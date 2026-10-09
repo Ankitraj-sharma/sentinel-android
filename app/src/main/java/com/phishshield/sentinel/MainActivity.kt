@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.SystemBarStyle
 import androidx.compose.runtime.*
 import androidx.compose.material3.*
 import androidx.compose.foundation.layout.*
@@ -22,6 +23,15 @@ class MainActivity : ComponentActivity() {
             val model: SentinelViewModel = viewModel()
             val settings by model.settings.collectAsStateWithLifecycle(initialValue = null)
             val saveError by model.saveError.collectAsStateWithLifecycle()
+            SideEffect {
+                val dark = settings?.darkTheme ?: true
+                enableEdgeToEdge(
+                    statusBarStyle = SystemBarStyle.auto(android.graphics.Color.TRANSPARENT,
+                        android.graphics.Color.TRANSPARENT) { dark },
+                    navigationBarStyle = SystemBarStyle.auto(android.graphics.Color.TRANSPARENT,
+                        android.graphics.Color.TRANSPARENT) { dark },
+                )
+            }
             SentinelTheme(dark = settings?.darkTheme ?: true) {
                 val loaded = settings
                 if (loaded == null) {
