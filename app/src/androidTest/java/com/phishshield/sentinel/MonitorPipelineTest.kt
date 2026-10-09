@@ -30,7 +30,10 @@ class MonitorPipelineTest {
         while (!condition() && SystemClock.elapsedRealtime() < until) Thread.sleep(100)
         assertTrue(message, condition())
     }
-    private fun post(kind: String) = shell("am start -W -n com.phishshield.sentinel.fixture/.FixtureActivity --es kind $kind")
+    private fun post(kind: String) {
+        Thread.sleep(350) // Keep synthetic traffic below Android's notification update rate limits.
+        shell("am start -W --activity-single-top -n com.phishshield.sentinel.fixture/.FixtureActivity --es kind $kind")
+    }
     private fun main(action: () -> Unit) = instrumentation.runOnMainSync(action)
 
     @Test fun realDeliveryRespectsConsentDedupPauseSelectionAndRevocation() = runBlocking {
