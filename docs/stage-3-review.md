@@ -6,7 +6,7 @@ Scope: evidence-based English explanations and a dedicated result view over the 
 
 Initial critic assessment: **8.5/10 provisional**. Required correction: reopening a retained result from a composition effect could override Edit mode after activity recreation.
 
-Improvement round 1: removed that effect. Analyse explicitly selects the result view; saved Edit/Back state is preserved. The real Activity/ViewModel instrumentation test now recreates both result and edit modes. Critic code reassessment: **9.0/10 provisional**, with no remaining Stage 3 code blocker. Final stage acceptance is pending physical-device verification; this score does not measure detection accuracy.
+Improvement round 1: removed that effect. Analyse explicitly selects the result view; saved Edit/Back state is preserved. The real Activity/ViewModel instrumentation test now recreates both result and edit modes. Critic code reassessment: **9.0/10 provisional**, with no remaining Stage 3 code blocker. Final independent critic acceptance: **9.0/10**, after one improvement round and physical verification. No remaining Stage 3 must-fix. This score measures stage quality, not detection accuracy.
 
 ## Observed verification
 
@@ -17,8 +17,14 @@ Improvement round 1: removed that effect. Analyse explicitly selects the result 
 - CI artifact ZIP SHA-256 verified: `fa7b023434cacff329cbc00b3fcc61afdf83c568ac5d466e5f1684a0a34a7ce6`.
 - Local APK: `artifacts/Sentinel-stage3.apk`; SHA-256 `fcffe78f6fd6b81681ee6e606412df73e1422068d3879139cb8087583066a25a`.
 
-## Pending acceptance checks
+## Physical acceptance completed
 
-The physical Vivo device appears offline in ADB, despite an available Windows ADB driver. Stage 3 has **not** been installed or tested on that phone. Stage 2 device results do not verify this stage. The user has been asked to select File transfer, toggle USB debugging and reconnect/authorize.
+- Physical Vivo V2117, Android 13/API 33: matching Stage 3 application and test APKs installed. Settings were backed up/restored after the CI debug signing-key change.
+- `artifacts/stage3-instrumentation.txt`: **5 tests passed**, 0 failures. Foundation tests (2), result UI tests (2), real Activity/ViewModel scan test (1), including result/edit recreation, Android Back, result reopening, stale-verdict invalidation and clearing.
+- Visually inspected `artifacts/stage3-partial.png`: high-risk request, partial coverage and 70 rule points explicitly distinguished from a probability.
+- Inspected `artifacts/stage3-destinations.png`: full shortener host, submitted URL and unresolved-destination limitation readable; Clear scan accessible by scrolling.
+- Inspected `artifacts/stage3-large.png` and `artifacts/stage3-large-scroll.png` with system font scale 1.3: summary and evidence wrap and scroll correctly. Original font scale 0.85 restored and verified.
+- Manually pressed Android Back: original input and View last result retained.
+- Critic independently inspected the instrumentation output and four screenshots; final rating **9.0/10**, accepted after one improvement round.
 
-When connected: install the matching app/test APKs, execute all five Android instrumentation tests, inspect result evidence/partial coverage and enlarged-font screens, then request the critic's final assessment. Record actual outcomes here before declaring Stage 3 complete. TalkBack and API 26 runtime remain unverified.
+Stage 3 is complete within its defined scope. Verification covers one physical Android 13 device. TalkBack and API 26 runtime remain untested. Screenshot and test artifacts stay local/ignored; automatic notifications, QR/sharing and history remain later stages.
