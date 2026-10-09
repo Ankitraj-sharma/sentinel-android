@@ -61,7 +61,7 @@ fun ScanScreen(state: ScanState, onInput: (String) -> Unit, onAnalyse: () -> Uni
     }
     Column(Modifier.fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text("SENTINEL", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
+        BrandHeader()
         Text("Analyse a message", style = MaterialTheme.typography.headlineLarge)
         Text("Paste English message text or an HTTP(S) URL. Analysis runs on this device.")
         OutlinedButton(onClick = {

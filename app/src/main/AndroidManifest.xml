@@ -15,7 +15,7 @@
         </intent>
     </queries>
     <application android:allowBackup="false" android:label="@string/build_app_name"
-        android:icon="@drawable/ic_sentinel" android:supportsRtl="true"
+        android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher" android:supportsRtl="true"
         android:theme="@style/Theme.Sentinel">
         <service android:name=".monitor.ProtectionService" android:exported="false" android:stopWithTask="false"
             android:foregroundServiceType="specialUse">

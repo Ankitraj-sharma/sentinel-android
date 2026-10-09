@@ -49,7 +49,7 @@ fun HistoryScreen(state: HistoryState, onEnabled: (Boolean) -> Unit, onDelete: (
     LaunchedEffect(Unit) { onRefresh() }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
-            Text("SENTINEL", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
+            BrandHeader()
             Spacer(Modifier.height(12.dp))
             Text("Detection history", style = MaterialTheme.typography.headlineLarge)
             Text("Private metadata, with deletion you control.")

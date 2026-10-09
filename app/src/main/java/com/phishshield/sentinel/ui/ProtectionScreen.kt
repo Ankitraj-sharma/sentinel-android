@@ -47,7 +47,7 @@ fun ProtectionScreen(settings: UserSettings, state: MonitorState,
     }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text("SENTINEL", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        BrandHeader()
         Text("Your protection", style = MaterialTheme.typography.headlineLarge)
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

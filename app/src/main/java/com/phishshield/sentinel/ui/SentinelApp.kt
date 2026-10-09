@@ -117,8 +117,7 @@ fun SentinelApp(settings: UserSettings, saveError: Boolean = false,
 private fun Page(title: String, subtitle: String, content: @Composable ColumnScope.() -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)) {
-        Text("SENTINEL", style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary)
+        BrandHeader()
         Text(title, style = MaterialTheme.typography.headlineLarge)
         Text(subtitle, style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -133,8 +132,8 @@ private fun Welcome(saveError: Boolean, onContinue: () -> Unit) {
         Column(Modifier.safeDrawingPadding().fillMaxSize().verticalScroll(rememberScrollState())
             .padding(28.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
             Spacer(Modifier.height(24.dp))
-            Icon(Icons.Outlined.Shield, contentDescription = null,
-                modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
+            androidx.compose.foundation.Image(androidx.compose.ui.res.painterResource(com.phishshield.sentinel.R.drawable.sentinel_emblem),
+                contentDescription = null, modifier = Modifier.size(144.dp))
             Text("Sentinel", style = MaterialTheme.typography.displaySmall)
             Text("Understand suspicious messages.", style = MaterialTheme.typography.headlineMedium)
             Text("Designed for on-device scam analysis with clear explanations and access you control.",
