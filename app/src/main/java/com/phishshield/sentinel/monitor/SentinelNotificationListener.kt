@@ -69,8 +69,11 @@ class SentinelNotificationListener : NotificationListenerService() {
         }
     }
 
-    private fun allowed(preview: Preview) = generation == preview.generation && MonitorRuntime.state.value.connected &&
-        policy.accepts(preview.owner, packageName, false, false)
+    private fun allowed(preview: Preview): Boolean {
+        settings?.let(::refreshPolicy)
+        return generation == preview.generation && MonitorRuntime.state.value.connected &&
+            policy.accepts(preview.owner, packageName, false, false)
+    }
 
     private fun drain() { while (queue.tryReceive().isSuccess) { } }
     private fun refreshPolicy(next: UserSettings) {

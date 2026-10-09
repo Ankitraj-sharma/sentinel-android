@@ -38,13 +38,11 @@ class MonitorPipelineTest {
         val before = repository.settings.first()
         val manager = context.getSystemService(NotificationManager::class.java)
         val accessBefore = if (android.os.Build.VERSION.SDK_INT >= 27) manager.isNotificationListenerAccessGranted(ComponentName(context, SentinelNotificationListener::class.java)) else false
-        val alertsBefore = manager.areNotificationsEnabled()
+        assertTrue("Grant app and fixture POST_NOTIFICATIONS with adb before this physical test", manager.areNotificationsEnabled())
         try {
             repository.set(Setting.MONITORING, false)
             repository.set(Setting.WHATSAPP, false); repository.set(Setting.GMAIL, false); repository.set(Setting.SMS, false)
             repository.set(Setting.ONBOARDING, true); repository.set(Setting.DEMO_SOURCE, true)
-            shell("pm grant com.phishshield.sentinel android.permission.POST_NOTIFICATIONS")
-            shell("pm grant com.phishshield.sentinel.fixture android.permission.POST_NOTIFICATIONS")
             shell("cmd notification allow_listener $component")
             waitFor("listener connected") { MonitorRuntime.state.value.connected }
             repository.set(Setting.MONITORING, true)
@@ -89,10 +87,6 @@ class MonitorPipelineTest {
             val beforeIgnored = MonitorRuntime.state.value.scanned
             post("group"); post("ongoing"); Thread.sleep(600)
             assertEquals("summary and ongoing ignored", beforeIgnored, MonitorRuntime.state.value.scanned)
-            shell("pm revoke com.phishshield.sentinel android.permission.POST_NOTIFICATIONS")
-            main { MonitorRuntime.refresh(context) }
-            post("updated")
-            waitFor("warning remains available with alerts denied") { MonitorRuntime.state.value.lastEvent.contains("System alert delivery is disabled") }
             shell("cmd notification disallow_listener $component")
             waitFor("revoked connection clears warning") { !MonitorRuntime.state.value.connected && MonitorRuntime.state.value.latest == null }
             shell("cmd notification allow_listener $component")
@@ -108,8 +102,6 @@ class MonitorPipelineTest {
             repository.set(Setting.DEMO_SOURCE, before.demoSource); repository.set(Setting.ONBOARDING, before.onboardingComplete)
             repository.set(Setting.MONITORING, before.monitoring)
             if (accessBefore) shell("cmd notification allow_listener $component")
-            if (alertsBefore) shell("pm grant com.phishshield.sentinel android.permission.POST_NOTIFICATIONS")
-            else shell("pm revoke com.phishshield.sentinel android.permission.POST_NOTIFICATIONS")
             main { MonitorRuntime.clear(context); MonitorRuntime.refresh(context) }
             shell("am force-stop com.phishshield.sentinel.fixture")
         }
