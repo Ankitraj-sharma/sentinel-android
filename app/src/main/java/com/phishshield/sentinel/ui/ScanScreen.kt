@@ -91,7 +91,7 @@ fun ScanScreen(state: ScanState, onInput: (String) -> Unit, onAnalyse: () -> Uni
         if (result != null) OutlinedButton(onClick = { showingResult = true }, modifier = Modifier.fillMaxWidth()) {
             Text("View last result")
         }
-        TextButton(onClick = { keyboard?.hide(); onClear() }, modifier = Modifier.fillMaxWidth(), enabled = state.input.isNotEmpty() || state.result != null) { Text("Clear") }
+        TextButton(onClick = { keyboard?.hide(); onClear(); notice = null }, modifier = Modifier.fillMaxWidth(), enabled = state.input.isNotEmpty() || state.result != null || state.error != null || state.busy || notice != null) { Text(if (state.busy) "Cancel and clear" else "Clear") }
         if (state.busy) {
             LinearProgressIndicator(Modifier.fillMaxWidth())
             Text(if (state.source == InputSource.QR_IMAGE && state.input.isEmpty()) "Reading QR image…" else "Analysing locally…")

@@ -14,6 +14,18 @@ import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class InputImportTest {
+    @Test fun contentUriReadingEnforcesByteDimensionAndFormatBounds() {
+        val resolver = InstrumentationRegistry.getInstrumentation().targetContext.contentResolver
+        assertEquals("https://example.org", QrImageDecoder.read(resolver, android.net.Uri.parse("content://com.phishshield.sentinel.test.qr/valid")))
+        for ((path, expected) in listOf("large" to "12 MB", "dimensions" to "dimensions", "invalid" to "format")) {
+            try { QrImageDecoder.read(resolver, android.net.Uri.parse("content://com.phishshield.sentinel.test.qr/$path")); fail(path) }
+            catch (failure: QrImportException) { assertTrue("$path: ${failure.message}", failure.message!!.contains(expected)) }
+        }
+        try { QrImageDecoder.read(resolver, android.net.Uri.parse("file:///sdcard/private.png")); fail("File URI accepted") }
+        catch (failure: QrImportException) { assertTrue(failure.message!!.contains("picker")) }
+        try { QrImageDecoder.read(resolver, android.net.Uri.parse("content://com.phishshield.sentinel.test.qr/missing")); fail("Missing image accepted") }
+        catch (_: java.io.FileNotFoundException) { }
+    }
     private fun qr(text: String, size: Int = 512): Bitmap {
         val matrix = QRCodeWriter().encode(text, BarcodeFormat.QR_CODE, size, size)
         return Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888).apply {

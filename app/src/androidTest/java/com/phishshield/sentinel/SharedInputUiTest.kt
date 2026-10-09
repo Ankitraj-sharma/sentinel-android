@@ -41,5 +41,8 @@ class SharedInputUiTest {
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Content exceeds 20000 characters. Nothing was imported or scanned.").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Analyse locally").performScrollTo().assertIsNotEnabled()
         compose.onNode(hasSetTextAction()).assertTextContains("")
+        compose.onNodeWithText("Clear", substring = false).performScrollTo().assertIsEnabled().performClick()
+        compose.onNodeWithText("Content exceeds 20000 characters. Nothing was imported or scanned.").assertDoesNotExist()
+        compose.onNodeWithText("0 / 20000 characters · Not saved to history").assertExists()
     }
 }
