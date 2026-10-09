@@ -17,7 +17,6 @@ import com.phishshield.sentinel.engine.ThreatEngine
 fun ScanScreen(state: ScanState, onInput: (String) -> Unit, onAnalyse: () -> Unit, onClear: () -> Unit) {
     val keyboard = LocalSoftwareKeyboardController.current
     var showingResult by rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(state.result) { if (state.result != null) showingResult = true }
     val result = state.result
     if (showingResult && result != null) {
         BackHandler { showingResult = false }
@@ -34,7 +33,7 @@ fun ScanScreen(state: ScanState, onInput: (String) -> Unit, onAnalyse: () -> Uni
             label = { Text("Message or URL") }, modifier = Modifier.fillMaxWidth(),
             minLines = 3, maxLines = 6, isError = state.error != null,
             supportingText = { Text(state.error ?: "${state.input.length} / ${ThreatEngine.MAX_INPUT} characters · Not saved to history") })
-            Button(onClick = { keyboard?.hide(); onAnalyse() }, modifier = Modifier.fillMaxWidth(), enabled = state.input.isNotBlank() && !state.busy && state.error == null) {
+            Button(onClick = { keyboard?.hide(); showingResult = true; onAnalyse() }, modifier = Modifier.fillMaxWidth(), enabled = state.input.isNotBlank() && !state.busy && state.error == null) {
                 Text(if (state.busy) "Analysing…" else "Analyse locally")
             }
         if (result != null) OutlinedButton(onClick = { showingResult = true }, modifier = Modifier.fillMaxWidth()) {

@@ -25,10 +25,15 @@ class ScanUiTest {
         compose.waitUntil(10_000) { compose.onAllNodesWithText("High risk").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("High risk").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Supported rules checked · Website and sender unverified").assertExists()
+        compose.activityRule.scenario.recreate()
+        compose.onNodeWithText("High risk").assertExists()
         compose.activity.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.onNodeWithText("Analyse a message").assertIsDisplayed()
         compose.onNodeWithText("View last result").performScrollTo().performClick()
         compose.onNodeWithText("Edit message").performScrollTo().performClick()
+        compose.activityRule.scenario.recreate()
+        compose.onNodeWithText("Analyse a message").assertExists()
+        compose.onNodeWithText("View last result").assertExists()
         compose.onNode(hasSetTextAction()).performScrollTo().performTextReplacement("Your appointment is tomorrow.")
         compose.onNodeWithText("High risk").assertDoesNotExist()
         compose.onNodeWithText("Analyse locally").performScrollTo().performClick()
