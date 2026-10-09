@@ -10,21 +10,18 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.phishshield.sentinel.data.SettingsRepository
-import com.phishshield.sentinel.data.Setting
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.phishshield.sentinel.ui.SentinelApp
 import com.phishshield.sentinel.ui.SentinelTheme
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val repository = SettingsRepository(applicationContext)
         setContent {
-            val settings by repository.settings.collectAsStateWithLifecycle(initialValue = null)
-            val scope = rememberCoroutineScope()
-            var saveError by remember { mutableStateOf(false) }
+            val model: SentinelViewModel = viewModel()
+            val settings by model.settings.collectAsStateWithLifecycle(initialValue = null)
+            val saveError by model.saveError.collectAsStateWithLifecycle()
             SentinelTheme(dark = settings?.darkTheme ?: true) {
                 val loaded = settings
                 if (loaded == null) {
@@ -32,12 +29,8 @@ class MainActivity : ComponentActivity() {
                         Box(contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                     }
                 } else {
-                    SentinelApp(loaded, saveError, onDismissError = { saveError = false }) { key, value ->
-                        scope.launch {
-                            try { repository.set(key, value) }
-                            catch (_: java.io.IOException) { saveError = true }
-                        }
-                    }
+                    SentinelApp(loaded, saveError, onDismissError = model::dismissError,
+                        onSetting = model::set)
                 }
             }
         }

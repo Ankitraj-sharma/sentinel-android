@@ -3,6 +3,7 @@ package com.phishshield.sentinel.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -13,6 +14,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.Role
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import com.phishshield.sentinel.data.Setting
@@ -29,7 +31,7 @@ private enum class Destination(val label: String, val icon: ImageVector) {
 fun SentinelApp(settings: UserSettings, saveError: Boolean = false,
     onDismissError: () -> Unit = {}, onSetting: (Setting, Boolean) -> Unit) {
     if (!settings.onboardingComplete) {
-        Welcome { onSetting(Setting.ONBOARDING, true) }
+        Welcome(saveError) { onSetting(Setting.ONBOARDING, true) }
         return
     }
     val nav = rememberNavController()
@@ -84,7 +86,7 @@ private fun Page(title: String, subtitle: String, content: @Composable ColumnSco
 }
 
 @Composable
-private fun Welcome(onContinue: () -> Unit) {
+private fun Welcome(saveError: Boolean, onContinue: () -> Unit) {
     Surface(Modifier.fillMaxSize()) {
         Column(Modifier.safeDrawingPadding().fillMaxSize().verticalScroll(rememberScrollState())
             .padding(28.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
@@ -98,6 +100,8 @@ private fun Welcome(onContinue: () -> Unit) {
             Info("Foundation preview", "This build provides navigation and saved preferences. Automatic detection, scanning and warnings are not available yet.")
             Text("No message access is requested in this build. Settings stay on this device.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (saveError) Text("Could not save setup. Please try again.",
+                color = MaterialTheme.colorScheme.error)
             Button(onClick = onContinue, modifier = Modifier.fillMaxWidth()) { Text("Explore Sentinel") }
             Text("Team PhishShield · Code Carnival 3.0", style = MaterialTheme.typography.labelMedium)
         }
@@ -129,7 +133,7 @@ private fun Protection(onSettings: () -> Unit) {
 @Composable
 private fun Scan() {
     Page("Scan content", "A fallback when a notification does not contain the full message.") {
-        Info("Scanning arrives in Stage 5", "The local engine arrives first. QR decoding and manual inputs will then use the same analysis pipeline.")
+        Info("Scanning is coming soon", "Message, link and QR analysis are not available in this preview. They will share the same on-device analysis engine.")
         Info("Messages and links", "Paste or share suspicious content for an explained result.")
         Info("QR destinations", "Inspect a decoded destination before deciding whether to open it.")
         Text("No content is collected on this screen.", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -144,7 +148,7 @@ private fun History(enabled: Boolean) {
         Text("No detections yet", style = MaterialTheme.typography.titleLarge)
         Text("Detection is not available in this foundation build. No messages or scan results have been stored.")
         Info(if (enabled) "History preference enabled" else "History preference disabled",
-            "This preference is saved for the future engine. History storage and deletion arrive in Stage 6.")
+            "Your preference is saved. Detection history and deletion controls will be available when scanning is enabled.")
     }
 }
 
@@ -175,15 +179,16 @@ private fun Settings(settings: UserSettings, onSetting: (Setting, Boolean) -> Un
 
 @Composable
 private fun Preference(title: String, summary: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+    Row(Modifier.fillMaxWidth().toggleable(value = checked, role = Role.Switch,
+        onValueChange = onChange).semantics(mergeDescendants = true) { }
+        .padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(title, style = MaterialTheme.typography.titleMedium)
             Text(summary, style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Switch(checked = checked, onCheckedChange = onChange,
-            modifier = Modifier.semantics { contentDescription = title })
+        Switch(checked = checked, onCheckedChange = null)
     }
 }
 
