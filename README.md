@@ -13,7 +13,7 @@ Notification access does not provide complete access to private chats or inboxes
 
 ## Status
 
-Stage 4 adds opt-in local notification preview monitoring, selected sources, connection/access/alert status, generic system warnings and an in-memory notification evidence view. Implementation is under verification; see [Stage 4 review](docs/stage-4-review.md).
+Stage 4 is verified: opt-in local notification preview monitoring, selected sources, connection/access/alert status, generic system warnings and an in-memory notification evidence view. Independent critic accepted 9/10 after three improvement rounds; 29 engine tests and 9 physical-phone tests passed. See [Stage 4 review](docs/stage-4-review.md) for evidence and coverage limits.
 
 Automatic analysis requires explicit Enable local monitoring, Android notification access and a selected source. WhatsApp/Business, Gmail and the current default SMS app are supported by exact package selection. Only newly delivered readable previews are analysed; full chats/inboxes, hidden content, live website reputation and guaranteed alert delivery are unavailable. Android 15 may redact OTP notifications. Manual Scan remains available. Rules do not prove safety or use a trained ML model. QR, sharing and persistent history follow later.
 

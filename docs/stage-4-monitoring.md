@@ -6,7 +6,7 @@ Monitoring defaults off. Setup separately explains local reading of selected pre
 
 Exact sources: WhatsApp `com.whatsapp`, Business `com.whatsapp.w4b`, Gmail `com.google.android.gm`, and the current default SMS package resolved through Android. The default SMS package is rechecked before event acceptance and before committing an analysis. Group summaries, ongoing notifications and Sentinel's own alerts are ignored. Package selection does not authenticate the sender.
 
-The manifest declares the narrow SMS_DELIVER package-visibility query required by [Android's default SMS package API](https://developer.android.com/reference/android/provider/Telephony.Sms#getDefaultSmsPackage(android.content.Context)) on Android 11+. This is package metadata visibility, not permission to read the SMS inbox. Instrumentation compares the resolved owner with the system SMS role without reading messages.
+The manifest declares the narrow SMS_DELIVER package-visibility query required by [Android's default SMS package API](https://developer.android.com/reference/android/provider/Telephony.Sms#getDefaultSmsPackage(android.content.Context)) on Android 11+, plus SENDTO with the smsto scheme for SMS handler visibility. These expose package metadata, not permission to read the SMS inbox. Instrumentation compares the resolved owner with the system SMS role without reading messages.
 
 ## Pipeline and limits
 
@@ -21,6 +21,8 @@ High/review outcomes create a single latest-warning memory record and a generic 
 `:fixture` is a debug-only separate Android publisher, with fixed scam, benign, changed, shortener, hidden, group and ongoing examples. Sentinel only selects its exact package in debug builds after Synthetic demo source is enabled. The fixture has no network permission and is not shipped as a production feature. It verifies actual Android callback/alert delivery; it does not simulate WhatsApp/Gmail internals or establish real-world detection accuracy.
 
 Physical test prerequisites: install app/debug test APKs and fixture-debug APK; grant POST_NOTIFICATIONS to the app and fixture before running `MonitorPipelineTest` (API 33+). The user must authorize notification access testing. The test temporarily disables all real source analysis, permits only the fixture and restores original source/monitoring/access settings. Permission revocation can kill the app UID, so denied-alert testing runs separately from instrumentation. The fixture is force-stopped at test end.
+
+The publisher handles warm launches through singleTop/onNewIntent; instrumentation paces updates below the system notification rate limit. A real system-tray tap is checked manually on the physical phone because OEM System UI node access is not portable. The automated test still asserts that the actual system alert has been posted with a content PendingIntent and no message body.
 
 ## Android evidence
 
