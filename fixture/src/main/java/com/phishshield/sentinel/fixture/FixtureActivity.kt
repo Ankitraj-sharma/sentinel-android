@@ -5,6 +5,7 @@ import android.app.Activity
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.widget.Button
@@ -15,6 +16,11 @@ import android.widget.TextView
 class FixtureActivity : Activity() {
     private val manager by lazy { getSystemService(NotificationManager::class.java) }
     private lateinit var status: TextView
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        intent.getStringExtra("kind")?.let(::post)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         manager.createNotificationChannel(NotificationChannel("demo", "Synthetic previews", NotificationManager.IMPORTANCE_DEFAULT))
