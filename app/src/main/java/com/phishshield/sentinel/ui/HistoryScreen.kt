@@ -26,7 +26,7 @@ fun HistoryControl(state: HistoryState, onEnabled: (Boolean) -> Unit) {
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text("Save detection history", style = MaterialTheme.typography.titleMedium)
-            Text(if (state.enabled) "On · Encrypted metadata only · 7 days / 100 entries" else "Off · No future scan metadata is saved",
+            Text(if (state.enabled) "On · Encrypted metadata only · 100 entries" else "Off · No future scan metadata is saved",
                 style = MaterialTheme.typography.bodyMedium)
         }
         Switch(state.enabled, onCheckedChange = null)
@@ -34,7 +34,7 @@ fun HistoryControl(state: HistoryState, onEnabled: (Boolean) -> Unit) {
     confirm?.let { enabled ->
         AlertDialog(onDismissRequest = { confirm = null },
             title = { Text(if (enabled) "Enable private history?" else "Turn off and delete history?") },
-            text = { Text(if (enabled) "Save the time, source, risk level, score and matched rule names for new analyses. Message text, OTPs, URLs and images are never saved. Metadata is encrypted on this device, kept for up to 7 days and capped at 100 entries. Existing scans are not imported."
+            text = { Text(if (enabled) "Save the time, source, risk level, score and matched rule names for new analyses. Message text, OTPs, URLs and images are never saved. Metadata is encrypted on this device and capped at 100 entries. Entries older than 7 days are removed when Sentinel next runs or refreshes. Existing scans are not imported."
                 else "Delete all saved metadata and its encryption key, and stop future saves. Current scan content is separate; use Clear scan to remove it from memory.") },
             confirmButton = { TextButton(onClick = { confirm = null; onEnabled(enabled) }) { Text(if (enabled) "Enable history" else "Turn off and delete") } },
             dismissButton = { TextButton(onClick = { confirm = null }) { Text("Cancel") } })
@@ -61,10 +61,11 @@ fun HistoryScreen(state: HistoryState, onEnabled: (Boolean) -> Unit, onDelete: (
             Button(onClick = { clearAll = true }, enabled = !state.working) { Text("Reset local history") }
         } }
         item {
-            Text("${state.entries.size} / 100 entries · Expires after 7 days", style = MaterialTheme.typography.titleMedium)
+            Text(if (state.error == null) "${state.entries.size} / 100 entries · 7-day retention" else "Saved entries unavailable", style = MaterialTheme.typography.titleMedium)
+            Text("Expired metadata is removed on next app use or refresh. No background deletion is scheduled.", style = MaterialTheme.typography.bodySmall)
             Text("Messages, destinations and original evidence are not stored. A history entry cannot reproduce the full scan. No obvious threat does not prove safety.", style = MaterialTheme.typography.bodySmall)
         }
-        if (state.entries.isEmpty() && state.loaded) item {
+        if (state.entries.isEmpty() && state.loaded && state.error == null) item {
             Text("No detections yet", style = MaterialTheme.typography.titleLarge)
             Text(if (state.enabled) "New completed analyses can save metadata. Rejected input is not recorded." else "Enable history to save metadata from new analyses. Existing scans stay in memory only.")
         }

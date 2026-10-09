@@ -13,9 +13,9 @@ Notification access does not provide complete access to private chats or inboxes
 
 ## Status
 
-Stage 5 is verified: camera QR scanning, bounded picker-selected QR images and plain-text Android sharing feed an explicit review screen before local analysis. Independent critic accepted 9/10 after two review/improvement rounds; 32 engine tests and 16 physical-phone tests passed. See [Stage 5 review](docs/stage-5-review.md) and [input paths](docs/stage-5-input.md). Stage 4 notification protection remains available and its regressions also passed.
+Stage 6 implementation is under verification: encrypted opt-in metadata history, deletion/privacy controls and transparent synthetic evaluation. Stage 5 QR/share and Stage 4 notification paths remain available. See [Stage 6 privacy design](docs/stage-6-history.md); final independent acceptance follows observed tests.
 
-Automatic analysis requires explicit Enable local monitoring, Android notification access and a selected source. WhatsApp/Business, Gmail and the current default SMS app are supported by exact package selection. Only newly delivered readable previews are analysed; full chats/inboxes, hidden content, live website reputation and guaranteed alert delivery are unavailable. Android 15 may redact OTP notifications. Manual Scan, QR camera/image and shared-text input are available. QR supports HTTP(S) destinations only; links are never opened automatically. Rules do not prove safety or use a trained ML model. Persistent history follows later.
+Automatic analysis requires explicit Enable local monitoring, Android notification access and a selected source. WhatsApp/Business, Gmail and the current default SMS app are supported by exact package selection. Only newly delivered readable previews are analysed; full chats/inboxes, hidden content, live website reputation and guaranteed alert delivery are unavailable. Android 15 may redact OTP notifications. Manual Scan, QR camera/image and shared-text input are available. QR supports HTTP(S) destinations only; links are never opened automatically. Rules do not prove safety or use a trained ML model. Opt-in metadata history is available; full scan text and destinations are never stored in history.
 
 ## Planned stack
 
@@ -54,10 +54,10 @@ The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`. Devic
 - First launch explains this build's scope before entering the app.
 - All four tabs open and Android Back works.
 - Dark/light appearance updates immediately and persists after relaunch.
-- Source selections and the history preference persist after relaunch.
+- Source selections persist; metadata-history consent and encrypted entries survive relaunch.
 - Automatic monitoring remains paused until opt-in; listener access/connection and system alert delivery are separate visible states.
 - Manual Scan handles suspicious and legitimate messages, explains evidence, and treats unresolved destinations as inconclusive.
-- Editing or clearing a message removes its previous verdict; messages/results are not written to history.
+- Editing or clearing a message removes its current verdict; opt-in history stores only typed metadata. Delete controls remove saved entries separately.
 - Content scrolls on small screens and with enlarged text.
 - Optional notification-listener access and alert permission are explained and requested separately. Camera permission is requested only for QR camera scanning. No SMS inbox, broad image/storage, accessibility-service or internet permission is requested.
 
@@ -78,7 +78,7 @@ Stages 1–6 form the team's pre-event readiness milestone, estimated at 75%; th
 
 ## Privacy in this build
 
-Only preferences are stored in app-private DataStore. Current manual/shared/QR scans and the latest notification warning stay in memory. Process death loses results, while configuration changes retain them. QR camera frames and chosen images are not saved; no persistent picker URI grant is retained. Pause/source policy changes or listener disconnection clear the latest notification warning and its alert. Android delivers notification events broadly; unselected package previews are discarded before text extraction. Pause does not revoke Android access; use Manage notification access to revoke it. No network operation, analytics or persistent message history is used. Android backup is disabled.
+Preferences are stored in app-private DataStore. History starts off and requires explicit consent; older placeholder preferences do not enable it. Typed metadata (time, source, risk, score and rule codes) is encrypted with an Android Keystore key in app-private excluded-backup storage. No message text, URL, OTP or image is persisted. The ledger is capped at 100 entries; entries older than 7 days are removed on next app use/refresh. Turning history off deletes the ledger and encryption key; deletion invalidates queued saves. Current manual/shared/QR scans and the latest notification warning stay in memory. Process death loses results, while configuration changes retain them. QR camera frames and chosen images are not saved; no persistent picker URI grant is retained. Pause/source policy changes or listener disconnection clear the latest notification warning and its alert. Android delivers notification events broadly; unselected package previews are discarded before text extraction. Pause does not revoke Android access; use Manage notification access to revoke it. No network operation, analytics or persistent message-content history is used. Android backup is disabled.
 
 ## Attribution
 

@@ -38,6 +38,9 @@ class MonitorPipelineTest {
 
     @Test fun realDeliveryRespectsConsentDedupPauseSelectionAndRevocation() = runBlocking {
         val repository = SettingsRepository(context)
+        val history = HistoryRepository.get(context)
+        history.awaitReady()
+        assertFalse("Synthetic instrumentation requires history off initially", history.state.value.enabled)
         val before = repository.settings.first()
         val manager = context.getSystemService(NotificationManager::class.java)
         val accessBefore = if (android.os.Build.VERSION.SDK_INT >= 27) manager.isNotificationListenerAccessGranted(ComponentName(context, SentinelNotificationListener::class.java)) else false
@@ -46,6 +49,7 @@ class MonitorPipelineTest {
             repository.set(Setting.MONITORING, false)
             repository.set(Setting.WHATSAPP, false); repository.set(Setting.GMAIL, false); repository.set(Setting.SMS, false)
             repository.set(Setting.ONBOARDING, true); repository.set(Setting.DEMO_SOURCE, true)
+            assertTrue(history.setEnabled(true))
             shell("cmd notification allow_listener $component")
             waitFor("listener connected") { MonitorRuntime.state.value.connected }
             repository.set(Setting.MONITORING, true)
@@ -53,6 +57,11 @@ class MonitorPipelineTest {
             post("scam")
             waitFor("high risk warning delivered") { MonitorRuntime.state.value.latest?.result?.level == RiskLevel.HIGH }
             val first = MonitorRuntime.state.value.latest!!
+            waitFor("notification metadata saved with partial coverage") {
+                history.state.value.entries.any { it.source == com.phishshield.sentinel.engine.HistorySource.SYNTHETIC_DEMO && it.status == com.phishshield.sentinel.engine.AnalysisStatus.LIMITED }
+            }
+            assertFalse(history.state.value.entries.toString().contains("paypal.com.evil.test"))
+            val firstHistoryCount = history.state.value.entries.size
             val scanned = MonitorRuntime.state.value.scanned
             waitFor("system alert posted") { manager.activeNotifications.any { it.id == AlertNotifier.ALERT_ID } }
             val alert = manager.activeNotifications.first { it.id == AlertNotifier.ALERT_ID }.notification
@@ -61,6 +70,7 @@ class MonitorPipelineTest {
             // Actual tray tap is verified separately on-device; OEM System UI node access is not portable.
             post("scam"); Thread.sleep(600)
             assertEquals("identical update not rescanned", scanned, MonitorRuntime.state.value.scanned)
+            assertEquals("identical update not saved twice", firstHistoryCount, history.state.value.entries.size)
             post("updated")
             waitFor("changed update reanalysed") { MonitorRuntime.state.value.latest?.token != first.token }
             assertNotNull(MonitorRuntime.state.value.latest)
@@ -71,6 +81,12 @@ class MonitorPipelineTest {
             val skipped = MonitorRuntime.state.value.skipped
             post("hidden")
             waitFor("hidden body counted unassessed") { MonitorRuntime.state.value.skipped > skipped }
+            history.setEnabled(false)
+            val priorToken = MonitorRuntime.state.value.latest?.token
+            post("updated")
+            waitFor("notification still analysed with history off") { MonitorRuntime.state.value.latest?.token != priorToken }
+            Thread.sleep(300)
+            assertTrue("history off stores no metadata", history.state.value.entries.isEmpty())
             repository.set(Setting.MONITORING, false)
             waitFor("pause clears warning and disables policy") { !MonitorRuntime.state.value.policyEnabled && MonitorRuntime.state.value.latest == null }
             assertFalse(manager.activeNotifications.any { it.id == AlertNotifier.ALERT_ID })
@@ -97,6 +113,7 @@ class MonitorPipelineTest {
             main { MonitorRuntime.clear(context) }
             assertNull(MonitorRuntime.state.value.latest)
         } finally {
+            history.setEnabled(false)
             repository.set(Setting.MONITORING, false)
             shell("cmd notification disallow_listener $component")
             repository.set(Setting.WHATSAPP, before.whatsapp); repository.set(Setting.GMAIL, before.gmail); repository.set(Setting.SMS, before.sms)
