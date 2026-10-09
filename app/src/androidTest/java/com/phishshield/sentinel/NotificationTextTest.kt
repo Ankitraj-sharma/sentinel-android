@@ -11,6 +11,14 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class NotificationTextTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
+    @Test fun defaultSmsOwnerMatchesSystemRoleWithoutInboxPermission() {
+        if (android.os.Build.VERSION.SDK_INT < 29) return
+        val ui = InstrumentationRegistry.getInstrumentation().uiAutomation
+        val expected = android.os.ParcelFileDescriptor.AutoCloseInputStream(
+            ui.executeShellCommand("cmd role get-role-holders android.app.role.SMS")
+        ).use { it.bufferedReader().readText().trim().ifEmpty { null } }
+        assertEquals(expected, android.provider.Telephony.Sms.getDefaultSmsPackage(context))
+    }
     @Test fun bigTextAndMessagingPreviewsAreExtracted() {
         val expanded = Notification.Builder(context, "test").setContentTitle("Subject").setContentText("Short")
             .setStyle(Notification.BigTextStyle().bigText("Expanded warning text")).build()

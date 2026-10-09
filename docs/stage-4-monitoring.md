@@ -6,6 +6,8 @@ Monitoring defaults off. Setup separately explains local reading of selected pre
 
 Exact sources: WhatsApp `com.whatsapp`, Business `com.whatsapp.w4b`, Gmail `com.google.android.gm`, and the current default SMS package resolved through Android. The default SMS package is rechecked before event acceptance and before committing an analysis. Group summaries, ongoing notifications and Sentinel's own alerts are ignored. Package selection does not authenticate the sender.
 
+The manifest declares the narrow SMS_DELIVER package-visibility query required by [Android's default SMS package API](https://developer.android.com/reference/android/provider/Telephony.Sms#getDefaultSmsPackage(android.content.Context)) on Android 11+. This is package metadata visibility, not permission to read the SMS inbox. Instrumentation compares the resolved owner with the system SMS role without reading messages.
+
 ## Pipeline and limits
 
 System callbacks filter packages before extracting preview fields. Extraction combines bounded title/body/big-text/text-lines and MessagingStyle text (API 30+); older Android falls back to public text fields. Missing bodies and rejected extraction are counted as unassessed. At most 20,000 combined characters and 64 line/message entries are accepted; nothing is silently truncated by Sentinel. Android's own truncation/redaction cannot always be identified. Every analysed preview therefore has partial coverage.
