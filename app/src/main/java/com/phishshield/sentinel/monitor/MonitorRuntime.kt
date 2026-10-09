@@ -15,10 +15,12 @@ import kotlinx.coroutines.flow.asStateFlow
 fun demoPackage(context: Context): String = "com.phishshield.sentinel.fixture" +
     context.packageName.removePrefix("com.phishshield.sentinel")
 
+data class NotificationOrigin(val key: String, val owner: String, val revision: Long)
 data class NotificationDetection(val token: String, val source: String, val text: String,
-    val result: AnalysisResult, val receivedAt: Long)
+    val result: AnalysisResult, val receivedAt: Long, val origin: NotificationOrigin? = null)
 data class MonitorState(val connected: Boolean = false, val accessGranted: Boolean = false,
     val policyEnabled: Boolean = false,
+    val backgroundActive: Boolean = false,
     val alertsEnabled: Boolean = false, val scanned: Int = 0, val skipped: Int = 0,
     val lastEvent: String = "No selected notification received in this session.",
     val latest: NotificationDetection? = null)

@@ -106,6 +106,7 @@ class SentinelViewModel(application: Application) : AndroidViewModel(application
             try {
                 repository.set(key, enabled)
                 if (key == Setting.MONITORING && enabled) MonitorRuntime.ensureConnected(getApplication())
+                if (key == Setting.MONITORING) com.phishshield.sentinel.monitor.ProtectionService.syncFromVisibleActivity(getApplication())
                 mutableSaveError.value = false
             } catch (_: IOException) {
                 mutableSaveError.value = true

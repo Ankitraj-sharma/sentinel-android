@@ -4,6 +4,9 @@ import android.os.Bundle
 import android.content.Intent
 import com.phishshield.sentinel.monitor.AlertNotifier
 import com.phishshield.sentinel.monitor.MonitorRuntime
+import com.phishshield.sentinel.monitor.ProtectionService
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
 import com.phishshield.sentinel.input.readSharedInput
@@ -25,7 +28,10 @@ class MainActivity : ComponentActivity() {
     private fun readAlertToken(intent: Intent): String? = try { intent.getStringExtra(AlertNotifier.TOKEN_EXTRA) } catch (_: RuntimeException) { null }
     private val model: SentinelViewModel by viewModels()
     private var alertToken by mutableStateOf<String?>(null)
-    override fun onResume() { super.onResume(); MonitorRuntime.ensureConnected(this); model.refreshHistory() }
+    override fun onResume() {
+        super.onResume(); MonitorRuntime.ensureConnected(this); model.refreshHistory()
+        lifecycleScope.launch { ProtectionService.syncFromVisibleActivity(this@MainActivity) }
+    }
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent); setIntent(intent)
         alertToken = readAlertToken(intent)

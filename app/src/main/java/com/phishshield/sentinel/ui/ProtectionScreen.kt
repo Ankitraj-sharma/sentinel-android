@@ -56,6 +56,7 @@ fun ProtectionScreen(settings: UserSettings, state: MonitorState,
                     else "Monitoring is paused. Manual analysis remains available in Scan.")
                 Text("Notification access: ${if (state.accessGranted) "Granted" else "Not granted"}")
                 Text("Listener: ${if (state.connected) "Connected" else "Disconnected"}")
+                Text("Background protection: ${if (state.backgroundActive) "Running" else "Not running"}")
                 Text("System alerts: ${if (state.alertsEnabled) "Enabled" else "Disabled"} · Delivery can also be suppressed by Android settings or Do Not Disturb.")
             }
         }
@@ -86,6 +87,10 @@ fun ProtectionScreen(settings: UserSettings, state: MonitorState,
         }, modifier = Modifier.fillMaxWidth()) { Text("Reconnect listener") }
         setupError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Text("Sources", style = MaterialTheme.typography.titleLarge)
+        Text("While monitoring is enabled, Sentinel keeps a quiet protection notification so it can work with the app screen closed. Detected warning notifications are replaced after Sentinel posts its alert; messages remain in their source app.")
+        OutlinedButton(onClick = {
+            open(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:${context.packageName}")))
+        }, modifier = Modifier.fillMaxWidth()) { Text("Manage background battery settings") }
         Source("WhatsApp", "Personal and Business notification previews", settings.whatsapp) { onSetting(Setting.WHATSAPP, it) }
         Source("Gmail", "Notification previews, not inbox access", settings.gmail) { onSetting(Setting.GMAIL, it) }
         Source("SMS", "Current default SMS app notifications, not inbox access", settings.sms) { onSetting(Setting.SMS, it) }
