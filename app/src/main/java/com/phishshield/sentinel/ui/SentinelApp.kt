@@ -172,7 +172,7 @@ private fun Settings(settings: UserSettings, onSetting: (Setting, Boolean) -> Un
         OutlinedButton(onClick = onPauseClear, modifier = Modifier.fillMaxWidth()) { Text("Pause monitoring and clear session") }
         Text("Clears current scan and notification warning from memory. Saved metadata is deleted separately in History. Pausing does not revoke Android notification access.", style = MaterialTheme.typography.bodySmall)
         Info("No network access", "No internet permission, cloud analysis or analytics. Camera access is used only for QR scanning. A chosen QR image is read locally without saving the image. Preferences are saved locally. History is off by default; only opted-in metadata is encrypted and stored. Full scan text and the latest notification warning stay in memory.")
-        Text("Sentinel 0.6.0 · Private history and evaluation\nTeam PhishShield", style = MaterialTheme.typography.bodySmall,
+        Text("Sentinel ${com.phishshield.sentinel.BuildConfig.VERSION_NAME}\nTeam PhishShield", style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

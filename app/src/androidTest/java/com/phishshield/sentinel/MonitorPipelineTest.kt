@@ -22,9 +22,9 @@ class MonitorPipelineTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val context = instrumentation.targetContext
     private val component = ComponentName(context, SentinelNotificationListener::class.java).flattenToString()
-    private fun shell(command: String) {
-        ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand(command)).use { it.readBytes() }
-    }
+    private fun shell(command: String): String =
+        ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand(command)).use { String(it.readBytes()) }
+    private fun sourceVisible(): Boolean = shell("cmd notification list").contains("|${demoPackage(context)}|")
     private fun waitFor(message: String, condition: () -> Boolean) {
         val until = SystemClock.elapsedRealtime() + 15_000
         while (!condition() && SystemClock.elapsedRealtime() < until) Thread.sleep(100)
@@ -55,6 +55,15 @@ class MonitorPipelineTest {
             waitFor("listener connected") { MonitorRuntime.state.value.connected }
             repository.set(Setting.MONITORING, true)
             waitFor("policy enabled") { MonitorRuntime.state.value.policyEnabled }
+            shell("am start -W -n ${context.packageName}/com.phishshield.sentinel.MainActivity")
+            waitFor("background protection service running") { MonitorRuntime.state.value.backgroundActive }
+            shell("input keyevent KEYCODE_HOME")
+            main {
+                androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                    .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.STOPPED)
+                    .filterIsInstance<MainActivity>().forEach { it.finishAndRemoveTask() }
+            }
+            assertTrue("closing the app task keeps protection running", MonitorRuntime.state.value.backgroundActive)
             post("scam")
             waitFor("high risk warning delivered") { MonitorRuntime.state.value.latest?.result?.level == RiskLevel.HIGH }
             val first = MonitorRuntime.state.value.latest!!
@@ -65,13 +74,17 @@ class MonitorPipelineTest {
             val firstHistoryCount = history.state.value.entries.size
             val scanned = MonitorRuntime.state.value.scanned
             waitFor("system alert posted") { manager.activeNotifications.any { it.id == AlertNotifier.ALERT_ID } }
+            waitFor("detected source notification removed after warning") { !sourceVisible() }
+            assertTrue(manager.activeNotifications.any { it.id == ProtectionService.ID })
             val alert = manager.activeNotifications.first { it.id == AlertNotifier.ALERT_ID }.notification
+            assertEquals("Potential scam detected", alert.extras.getCharSequence(android.app.Notification.EXTRA_TITLE).toString())
             assertFalse(alert.extras.getCharSequence(android.app.Notification.EXTRA_TEXT).toString().contains("OTP"))
             assertNotNull(alert.contentIntent)
             // Actual tray tap is verified separately on-device; OEM System UI node access is not portable.
             post("scam"); Thread.sleep(600)
             assertEquals("identical update not rescanned", scanned, MonitorRuntime.state.value.scanned)
             assertEquals("identical update not saved twice", firstHistoryCount, history.state.value.entries.size)
+            waitFor("identical repost replaced without rescanning") { !sourceVisible() }
             // Simulate a transient runtime delivery gate; the recovery posts a real OS alert.
             // AppOps denial does not change areNotificationsEnabled in this instrumented Vivo process.
             main {
@@ -103,6 +116,7 @@ class MonitorPipelineTest {
             val priorWarning = MonitorRuntime.state.value.latest?.token
             post("local-url")
             waitFor("legitimate local URL still analysed") { MonitorRuntime.state.value.scanned > beforeLocal }
+            assertTrue("benign source notification retained", sourceVisible())
             assertEquals("weak URL traits do not issue a new warning", priorWarning, MonitorRuntime.state.value.latest?.token)
             assertTrue(MonitorRuntime.state.value.lastEvent.contains("No obvious threat"))
             post("benign")
@@ -120,6 +134,7 @@ class MonitorPipelineTest {
             assertTrue("history off stores no metadata", history.state.value.entries.isEmpty())
             repository.set(Setting.MONITORING, false)
             waitFor("pause clears warning and disables policy") { !MonitorRuntime.state.value.policyEnabled && MonitorRuntime.state.value.latest == null }
+            waitFor("pause stops background protection") { !MonitorRuntime.state.value.backgroundActive }
             assertFalse(manager.activeNotifications.any { it.id == AlertNotifier.ALERT_ID })
             val pausedCount = MonitorRuntime.state.value.scanned
             post("scam"); Thread.sleep(600)

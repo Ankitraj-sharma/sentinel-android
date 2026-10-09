@@ -45,15 +45,19 @@ object AlertNotifier {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val notification = Notification.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_sentinel)
-            .setContentTitle("Sentinel · ${detection.result.level.label}")
-            .setContentText("A selected notification matched warning rules. Tap to review on this device.")
+            .setContentTitle(if (detection.result.level == com.phishshield.sentinel.engine.RiskLevel.HIGH)
+                "Potential scam detected" else "Suspicious message detected")
+            .setContentText("${detection.source} · Avoid links, payments or sharing personal details. Tap to review.")
+            .setStyle(Notification.BigTextStyle().bigText("${detection.source} · This notification contains signs of a possible scam. Avoid opening links, making payments or sharing personal details until you verify the sender. Tap to review Sentinel’s assessment."))
+            .setCategory(Notification.CATEGORY_ERROR)
             .setVisibility(Notification.VISIBILITY_PRIVATE)
             .setPublicVersion(Notification.Builder(context, CHANNEL_ID).setSmallIcon(R.drawable.ic_sentinel)
-                .setContentTitle("Sentinel warning").setContentText("Unlock to review.").build())
+                .setContentTitle("Sentinel security alert").setContentText("A suspicious message was detected. Unlock to review.").build())
             .setContentIntent(pending).setAutoCancel(true).build()
         return try {
             context.getSystemService(NotificationManager::class.java).notify(ALERT_ID, notification)
             pendingToken = null
+            SentinelNotificationListener.dismissAfterAlert(detection)
             true
         } catch (_: SecurityException) { pendingToken = detection.token; false }
     }

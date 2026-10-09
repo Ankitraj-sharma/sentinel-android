@@ -14,6 +14,7 @@ import com.phishshield.sentinel.engine.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import java.util.UUID
+import java.lang.ref.WeakReference
 
 class SentinelNotificationListener : NotificationListenerService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -24,11 +25,14 @@ class SentinelNotificationListener : NotificationListenerService() {
     private val deduplicator = NotificationDeduplicator()
     private val settingsReady = CompletableDeferred<Unit>()
     private var startingEvents = 0
+    private var sequence = 0L
+    private val revisions = LinkedHashMap<String, Long>()
     private data class Preview(val generation: Long, val owner: String, val key: String,
-        val text: NotificationText, val receivedAt: Long, val historyTicket: HistoryTicket?)
+        val revision: Long, val text: NotificationText, val receivedAt: Long, val historyTicket: HistoryTicket?)
 
     override fun onCreate() {
         super.onCreate()
+        active = WeakReference(this)
         AlertNotifier.createChannel(this)
         scope.launch {
             SettingsRepository(applicationContext).settings.collect { next ->
@@ -45,7 +49,15 @@ class SentinelNotificationListener : NotificationListenerService() {
                     MonitorRuntime.update { it.copy(skipped = it.skipped + 1, lastEvent = unavailable) }
                     continue
                 }
-                if (deduplicator.duplicate(preview.key, preview.text.text)) continue
+                if (deduplicator.duplicate(preview.key, preview.text.text)) {
+                    val previous = MonitorRuntime.state.value.latest
+                    if (previous?.origin?.key == preview.key && previous.text == preview.text.text) {
+                        val refreshed = previous.copy(origin = NotificationOrigin(preview.key, preview.owner, preview.revision))
+                        MonitorRuntime.update { it.copy(latest = refreshed) }
+                        AlertNotifier.post(this@SentinelNotificationListener, refreshed)
+                    }
+                    continue
+                }
                 val result = try {
                     val engine = LocalThreatEngine.get(applicationContext)
                     withContext(Dispatchers.Default) { engine.analyse(preview.text.text) }
@@ -69,9 +81,10 @@ class SentinelNotificationListener : NotificationListenerService() {
                         "com.whatsapp", "com.whatsapp.w4b" -> "WhatsApp"
                         "com.google.android.gm" -> "Gmail"
                         demoPackage(this@SentinelNotificationListener) -> "Synthetic demo"
-                        else -> "Default SMS app"
+                        else -> "SMS"
                     }
-                    val detection = NotificationDetection(UUID.randomUUID().toString(), source, preview.text.text, limited, preview.receivedAt)
+                    val detection = NotificationDetection(UUID.randomUUID().toString(), source, preview.text.text, limited, preview.receivedAt,
+                        NotificationOrigin(preview.key, preview.owner, preview.revision))
                     MonitorRuntime.update { it.copy(latest = detection) }
                     if (!AlertNotifier.post(this@SentinelNotificationListener, detection)) {
                         MonitorRuntime.update { it.copy(lastEvent = "Warning available in Protection · System alert delivery is disabled.") }
@@ -84,11 +97,11 @@ class SentinelNotificationListener : NotificationListenerService() {
 
     private fun allowed(preview: Preview): Boolean {
         settings?.let(::refreshPolicy)
-        return generation == preview.generation && MonitorRuntime.state.value.connected &&
+        return generation == preview.generation && revisions[preview.key] == preview.revision && MonitorRuntime.state.value.connected &&
             policy.accepts(preview.owner, packageName, false, false)
     }
 
-    private fun drain() { while (queue.tryReceive().isSuccess) { } }
+    private fun drain() { while (queue.tryReceive().isSuccess) { }; revisions.clear() }
     private fun refreshPolicy(next: UserSettings) {
         val packages = buildSet {
             if (next.whatsapp) { add("com.whatsapp"); add("com.whatsapp.w4b") }
@@ -146,16 +159,33 @@ class SentinelNotificationListener : NotificationListenerService() {
         val flags = sbn.notification.flags
         if (!policy.accepts(sbn.packageName, packageName, flags and Notification.FLAG_GROUP_SUMMARY != 0,
                 flags and Notification.FLAG_ONGOING_EVENT != 0)) return
-        val preview = Preview(generation, sbn.packageName, sbn.key, extractNotificationText(sbn.notification), System.currentTimeMillis(),
+        val revision = ++sequence
+        revisions.remove(sbn.key); revisions[sbn.key] = revision
+        if (revisions.size > 128) revisions.remove(revisions.keys.first())
+        val preview = Preview(generation, sbn.packageName, sbn.key, revision, extractNotificationText(sbn.notification), System.currentTimeMillis(),
             HistoryRepository.get(applicationContext).ticket())
         if (!queue.trySend(preview).isSuccess) MonitorRuntime.update {
             it.copy(skipped = it.skipped + 1, lastEvent = "Preview skipped: local processing queue is full.")
         }
     }
     override fun onDestroy() {
+        if (active?.get() === this) active = null
         scope.cancel(); queue.close()
         MonitorRuntime.update { it.copy(connected = false, policyEnabled = false) }
         MonitorRuntime.clear(this)
         super.onDestroy()
+    }
+    private fun dismissDetectedSource(detection: NotificationDetection) {
+        val origin = detection.origin ?: return
+        if (MonitorRuntime.state.value.latest?.token != detection.token || !MonitorRuntime.state.value.connected ||
+            revisions[origin.key] != origin.revision || !policy.accepts(origin.owner, packageName, false, false)) return
+        try { cancelNotification(origin.key) }
+        catch (_: RuntimeException) {
+            MonitorRuntime.update { it.copy(lastEvent = "Sentinel warning posted. Android could not dismiss the source notification.") }
+        }
+    }
+    companion object {
+        private var active: WeakReference<SentinelNotificationListener>? = null
+        fun dismissAfterAlert(detection: NotificationDetection) { active?.get()?.dismissDetectedSource(detection) }
     }
 }
