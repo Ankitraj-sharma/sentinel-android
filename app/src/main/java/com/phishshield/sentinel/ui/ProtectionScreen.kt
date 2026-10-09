@@ -78,6 +78,9 @@ fun ProtectionScreen(settings: UserSettings, state: MonitorState,
                 permission.launch(Manifest.permission.POST_NOTIFICATIONS)
             else open(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName))
         }, modifier = Modifier.fillMaxWidth()) { Text("Enable or manage alerts") }
+        if (!state.alertsEnabled) TextButton(onClick = {
+            open(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName))
+        }, modifier = Modifier.fillMaxWidth()) { Text("Open alert settings") }
         if (state.accessGranted && !state.connected) OutlinedButton(onClick = {
             NotificationListenerService.requestRebind(ComponentName(context, SentinelNotificationListener::class.java))
         }, modifier = Modifier.fillMaxWidth()) { Text("Reconnect listener") }

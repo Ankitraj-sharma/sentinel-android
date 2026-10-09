@@ -91,7 +91,7 @@ class MonitorPipelineTest {
             waitFor("revoked connection clears warning") { !MonitorRuntime.state.value.connected && MonitorRuntime.state.value.latest == null }
             shell("cmd notification allow_listener $component")
             waitFor("listener reconnects") { MonitorRuntime.state.value.connected }
-            post("updated")
+            post("scam")
             waitFor("same preview can warn again after reconnect") { MonitorRuntime.state.value.latest != null }
             main { MonitorRuntime.clear(context) }
             assertNull(MonitorRuntime.state.value.latest)
