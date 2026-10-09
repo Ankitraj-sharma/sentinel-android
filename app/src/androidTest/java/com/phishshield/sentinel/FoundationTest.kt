@@ -28,7 +28,7 @@ class FoundationTest {
         }
         compose.onNodeWithText("Protection not active").assertIsDisplayed()
         compose.onNodeWithText("Scan", useUnmergedTree = true).performClick()
-        compose.onNodeWithText("Scan content").assertIsDisplayed()
+        compose.onNodeWithText("Analyse a message").assertIsDisplayed()
         compose.onNodeWithText("History", useUnmergedTree = true).performClick()
         compose.onNodeWithText("No detections yet").assertIsDisplayed()
         compose.onNodeWithText("Settings", useUnmergedTree = true).performClick()

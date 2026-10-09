@@ -24,6 +24,28 @@ class ThreatEngineTest {
         assertEquals(RiskLevel.HIGH, engine.analyse("Do not share your OTP. Send your OTP to me immediately.").level)
     }
 
+    @Test fun unrelatedSendingDoesNotOverrideNegativeAdvice() {
+        for (text in listOf("Please send the invoice; do not share your OTP.",
+            "Please send the invoice, then never share your password.",
+            "Please send the invoice then never share your password.")) {
+            assertFalse(text, engine.analyse(text).signals.any { it.id == "credential-request" })
+        }
+    }
+
+    @Test fun inlineDomainsMatchSchemeUrlsAndIgnoreEmailAddresses() {
+        val result = engine.analyse("PayPal account suspended. Act now: paypal.com.evil.test/login")
+        assertEquals("paypal.com.evil.test", result.urls.single().host)
+        assertEquals(RiskLevel.HIGH, result.level)
+        assertTrue(engine.analyse("Email support@example.com for help.").urls.isEmpty())
+        assertEquals("example.com", engine.analyse("Visit (example.com/path). Thanks.").urls.single().host)
+    }
+
+    @Test fun hiddenFormattingDoesNotHideARecognisedLink() {
+        val result = engine.analyse("PayPal account suspended. Act now h\u200Bttps://paypal.com.evil.test")
+        assertEquals(RiskLevel.HIGH, result.level)
+        assertTrue(result.limitations.any { it.contains("normalised") })
+    }
+
     @Test fun normalMessagesAndWeakKeywordsDoNotTriggerDanger() {
         for (text in listOf("Your appointment is tomorrow at 10.", "Urgent: project deadline tomorrow.",
             "We won the football game!", "Enter your OTP in the official app.",

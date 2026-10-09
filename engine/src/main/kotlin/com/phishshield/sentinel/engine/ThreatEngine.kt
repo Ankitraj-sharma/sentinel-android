@@ -12,8 +12,9 @@ class ThreatEngine(private val brands: List<Brand> = BrandExamples.entries) {
         const val MAX_URLS = 16
         private val links = Regex("(?i)\\b(?:https?://|www\\.)[^\\s<>\"']+")
         private val bareHost = Regex("(?i)^(?:[\\p{L}\\p{N}-]+\\.)+[\\p{L}]{2,63}(?::\\d{1,5})?(?:/[^\\s]*)?$")
+        private val inlineDomains = Regex("(?i)(?<![\\p{L}\\p{N}@./-])(?:[\\p{L}\\p{N}](?:[\\p{L}\\p{N}-]{0,61}[\\p{L}\\p{N}])?\\.)+(?:com|net|org|in|co|io|app|dev|test|invalid|example|sbi|uk|de|edu|gov|info|xyz)(?![\\p{L}\\p{N}.-])(?::\\d{1,5})?(?:/[^\\s<>\"']*)?")
         private val scheme = Regex("(?i)^[a-z][a-z0-9+.-]*:")
-        private val request = Regex("(?i)\\b(?:send|share|give|tell|reply(?: with)?|provide)\\b[^.!?\\n]{0,48}\\b(?:otp|one[ -]time password|password|pin|cvv|verification code|login code)\\b")
+        private val request = Regex("(?i)\\b(?:send|share|give|tell|reply(?: with)?|provide)\\b(?:\\s+(?!(?:do|don't|never|not|then|and)\\b)[\\p{L}\\p{N}'-]+){0,6}\\s+\\b(?:otp|one[ -]time password|password|pin|cvv|verification code|login code)\\b")
         private val urgency = Regex("(?i)\\b(?:urgent|immediately|act now|last chance|within \\d+ (?:minutes?|hours?))\\b")
         private val accountThreat = Regex("(?i)\\b(?:account|banking|card|wallet)\\b[^.!?\\n]{0,40}\\b(?:blocked|suspended|disabled|closed)\\b")
         private val payment = Regex("(?i)\\b(?:pay|transfer|send money|deposit|processing fee|refund fee)\\b")
@@ -48,7 +49,12 @@ class ThreatEngine(private val brands: List<Brand> = BrandExamples.entries) {
         add("advance-fee", "Fee requested before a benefit", "An upfront fee is mentioned. Confirm the purpose and recipient independently.",
             advanceFee.findAll(text).firstOrNull { !isNegated(text, it.range.first) }, 25)
 
-        val extracted = links.findAll(input).map { trimLink(it.value) }.distinct().toList()
+        val normalisationChanged = text != input
+        val explicit = (links.findAll(input) + if (normalisationChanged) links.findAll(text) else emptySequence()).toList()
+        val inline = inlineDomains.findAll(text).filter { candidate ->
+            explicit.none { it.range.first <= candidate.range.first && it.range.last >= candidate.range.last }
+        }
+        val extracted = (explicit.asSequence().map { it.value } + inline.map { it.value }).map(::trimLink).distinct().toList()
         val rawUrls = if (extracted.isNotEmpty()) extracted else {
             val trimmed = input.trim()
             if (bareHost.matches(trimmed) || scheme.containsMatchIn(trimmed) && !trimmed.contains(' ')) listOf(trimmed) else emptyList()
@@ -61,9 +67,11 @@ class ThreatEngine(private val brands: List<Brand> = BrandExamples.entries) {
             .map { (_, matches) -> matches.maxBy { it.weight } }
         val score = combined.sumOf { it.weight }.coerceAtMost(100)
         val limits = mutableListOf(offlineLimit, "English message patterns and a small example brand directory are supported. This is a rule-based prototype, not a trained ML model.")
+        if (normalisationChanged) limits += "Text matching normalises Unicode and removes invisible formatting; some evidence snippets show normalised text."
+        limits += "Inline bare links cover common configured suffixes; use a full HTTP(S) URL for other suffixes."
         urls.mapNotNullTo(limits) { it.limitation }
         val letters = text.filter { it.isLetter() }
-        val languageLimited = letters.isNotEmpty() && letters.count { it in 'a'..'z' || it in 'A'..'Z' } < letters.length / 2
+        val languageLimited = letters.isNotEmpty() && letters.count { it in 'a'..'z' || it in 'A'..'Z' } * 2 < letters.length
         if (languageLimited) limits += "Message language is outside the English rule coverage. A lack of matches is inconclusive."
         val incomplete = urls.any { it.host == null || it.limitation != null } || languageLimited
         val level = when {
