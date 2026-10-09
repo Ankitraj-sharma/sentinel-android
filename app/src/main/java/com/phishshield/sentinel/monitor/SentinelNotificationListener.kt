@@ -7,6 +7,8 @@ import android.service.notification.StatusBarNotification
 import com.phishshield.sentinel.BuildConfig
 import com.phishshield.sentinel.data.SettingsRepository
 import com.phishshield.sentinel.data.UserSettings
+import com.phishshield.sentinel.data.HistoryRepository
+import com.phishshield.sentinel.data.HistoryTicket
 import com.phishshield.sentinel.engine.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -21,7 +23,7 @@ class SentinelNotificationListener : NotificationListenerService() {
     private val deduplicator = NotificationDeduplicator()
     private val engine = ThreatEngine()
     private data class Preview(val generation: Long, val owner: String, val key: String,
-        val text: NotificationText, val receivedAt: Long)
+        val text: NotificationText, val receivedAt: Long, val historyTicket: HistoryTicket?)
 
     override fun onCreate() {
         super.onCreate()
@@ -52,6 +54,12 @@ class SentinelNotificationListener : NotificationListenerService() {
                 val limited = result.copy(status = if (result.status == AnalysisStatus.NOT_ANALYSED) result.status else AnalysisStatus.LIMITED,
                     limitations = result.limitations + "Notification preview only: hidden, truncated, bundled or redacted content and the sender's identity cannot be verified.")
                 MonitorRuntime.update { it.copy(scanned = it.scanned + 1, lastEvent = "Selected preview analysed locally · ${limited.level.label}") }
+                val historySource = when (preview.owner) {
+                    "com.whatsapp", "com.whatsapp.w4b" -> HistorySource.WHATSAPP
+                    "com.google.android.gm" -> HistorySource.GMAIL
+                    "com.phishshield.sentinel.fixture" -> HistorySource.SYNTHETIC_DEMO
+                    else -> HistorySource.SMS
+                }
                 if (limited.level == RiskLevel.HIGH || limited.level == RiskLevel.REVIEW) {
                     val source = when (preview.owner) {
                         "com.whatsapp", "com.whatsapp.w4b" -> "WhatsApp"
@@ -65,6 +73,7 @@ class SentinelNotificationListener : NotificationListenerService() {
                         MonitorRuntime.update { it.copy(lastEvent = "Warning available in Protection · System alert delivery is disabled.") }
                     }
                 }
+                HistoryRepository.get(applicationContext).record(preview.historyTicket, historySource, limited)
             }
         }
     }
@@ -112,7 +121,8 @@ class SentinelNotificationListener : NotificationListenerService() {
         val flags = sbn.notification.flags
         if (!policy.accepts(sbn.packageName, packageName, flags and Notification.FLAG_GROUP_SUMMARY != 0,
                 flags and Notification.FLAG_ONGOING_EVENT != 0)) return
-        val preview = Preview(generation, sbn.packageName, sbn.key, extractNotificationText(sbn.notification), System.currentTimeMillis())
+        val preview = Preview(generation, sbn.packageName, sbn.key, extractNotificationText(sbn.notification), System.currentTimeMillis(),
+            HistoryRepository.get(applicationContext).ticket())
         if (!queue.trySend(preview).isSuccess) MonitorRuntime.update {
             it.copy(skipped = it.skipped + 1, lastEvent = "Preview skipped: local processing queue is full.")
         }

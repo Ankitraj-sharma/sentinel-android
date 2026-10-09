@@ -28,7 +28,7 @@ import com.phishshield.sentinel.input.QrCaptureActivity
 
 @Composable
 fun ScanScreen(state: ScanState, onInput: (String) -> Unit, onAnalyse: () -> Unit, onClear: () -> Unit,
-    onQr: (String) -> Unit = {}, onQrImage: (Uri) -> Unit = {}) {
+    onQr: (String) -> Unit = {}, onQrImage: (Uri) -> Unit = {}, historyEnabled: Boolean = false) {
     val keyboard = LocalSoftwareKeyboardController.current
     val context = LocalContext.current
     var notice by rememberSaveable { mutableStateOf<String?>(null) }
@@ -56,7 +56,7 @@ fun ScanScreen(state: ScanState, onInput: (String) -> Unit, onAnalyse: () -> Uni
     if (showingResult && result != null) {
         BackHandler { showingResult = false }
         ResultScreen(result, state.input, onEdit = { showingResult = false },
-            onClear = { showingResult = false; onClear() }, inputSource = state.source.label.uppercase())
+            onClear = { showingResult = false; onClear() }, inputSource = state.source.label.uppercase(), historyNotice = state.historyNotice)
         return
     }
     Column(Modifier.fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(24.dp),
@@ -84,7 +84,7 @@ fun ScanScreen(state: ScanState, onInput: (String) -> Unit, onAnalyse: () -> Uni
         OutlinedTextField(value = state.input, onValueChange = onInput,
             label = { Text("Message or URL") }, modifier = Modifier.fillMaxWidth(),
             minLines = 3, maxLines = 6, isError = state.error != null,
-            supportingText = { Text(state.error ?: "${state.input.length} / ${ThreatEngine.MAX_INPUT} characters · Not saved to history") })
+            supportingText = { Text(state.error ?: "${state.input.length} / ${ThreatEngine.MAX_INPUT} characters · ${if (historyEnabled) "History on · Metadata only after analysis" else "Not saved to history"}") })
             Button(onClick = { keyboard?.hide(); showingResult = true; onAnalyse() }, modifier = Modifier.fillMaxWidth(), enabled = state.input.isNotBlank() && !state.busy && state.error == null) {
                 Text(if (state.busy) "Analysing…" else "Analyse locally")
             }

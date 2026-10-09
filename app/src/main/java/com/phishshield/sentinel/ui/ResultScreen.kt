@@ -20,7 +20,7 @@ import com.phishshield.sentinel.engine.*
 
 @Composable
 fun ResultScreen(result: AnalysisResult, input: String, onEdit: () -> Unit, onClear: () -> Unit,
-    notificationSource: String? = null, inputSource: String? = null) {
+    notificationSource: String? = null, inputSource: String? = null, historyNotice: String? = null) {
     val explanation = remember(result) { result.explain() }
     val color = when (result.level) {
         RiskLevel.HIGH -> MaterialTheme.colorScheme.error
@@ -108,8 +108,7 @@ fun ResultScreen(result: AnalysisResult, input: String, onEdit: () -> Unit, onCl
             }
             SelectionContainer { Text(annotated) }
         }
-        Text(if (notificationSource == null) "This scan is held in memory and is not saved to history. Clear removes it from the current scan."
-            else "This warning is held in memory, not saved to history. Clear removes this warning and its system alert.",
+        Text(historyNotice ?: "Full scan content is held in memory. Clear removes the current content; any opted-in metadata is managed separately in History.",
             style = MaterialTheme.typography.bodySmall)
         OutlinedButton(onClick = onClear, modifier = Modifier.fillMaxWidth()) { Text(if (notificationSource == null) "Clear scan" else "Clear warning") }
     }

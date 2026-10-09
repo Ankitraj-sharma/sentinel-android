@@ -25,7 +25,7 @@ class MainActivity : ComponentActivity() {
     private fun readAlertToken(intent: Intent): String? = try { intent.getStringExtra(AlertNotifier.TOKEN_EXTRA) } catch (_: RuntimeException) { null }
     private val model: SentinelViewModel by viewModels()
     private var alertToken by mutableStateOf<String?>(null)
-    override fun onResume() { super.onResume(); MonitorRuntime.refresh(this) }
+    override fun onResume() { super.onResume(); MonitorRuntime.refresh(this); model.refreshHistory() }
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent); setIntent(intent)
         alertToken = readAlertToken(intent)
@@ -41,6 +41,7 @@ class MainActivity : ComponentActivity() {
             val saveError by model.saveError.collectAsStateWithLifecycle()
             val scan by model.scan.collectAsStateWithLifecycle()
             val monitor by MonitorRuntime.state.collectAsStateWithLifecycle()
+            val history by model.history.collectAsStateWithLifecycle()
             SideEffect {
                 val dark = settings?.darkTheme ?: true
                 enableEdgeToEdge(
@@ -61,6 +62,9 @@ class MainActivity : ComponentActivity() {
                         scan = scan, onInput = model::updateInput, onAnalyse = model::analyse,
                         onClear = model::clearScan, onSetting = model::set, monitor = monitor,
                         onQr = model::importQr, onQrImage = model::importQrImage,
+                        history = history, onHistoryEnabled = model::setHistoryEnabled,
+                        onDeleteHistory = model::deleteHistory, onDeleteAllHistory = model::deleteAllHistory,
+                        onRefreshHistory = model::refreshHistory, onPauseClear = model::pauseAndClearSession,
                         alertToken = alertToken, onAlertHandled = { alertToken = null; intent.removeExtra(AlertNotifier.TOKEN_EXTRA) })
                 }
             }

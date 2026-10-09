@@ -18,14 +18,20 @@ import kotlinx.coroutines.withContext
 import com.phishshield.sentinel.engine.*
 import com.phishshield.sentinel.input.*
 import android.net.Uri
+import com.phishshield.sentinel.data.HistoryRepository
+import kotlinx.coroutines.flow.combine
+import com.phishshield.sentinel.monitor.MonitorRuntime
 
 data class ScanState(val input: String = "", val result: AnalysisResult? = null,
     val busy: Boolean = false, val error: String? = null,
-    val source: InputSource = InputSource.MANUAL, val importId: Long = 0)
+    val source: InputSource = InputSource.MANUAL, val importId: Long = 0, val historyNotice: String? = null)
 
 class SentinelViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = SettingsRepository(application)
-    val settings = repository.settings
+    private val historyRepository = HistoryRepository.get(application)
+    val history = historyRepository.state
+    val settings = combine(repository.settings, history) { settings, history -> settings.copy(saveHistory = history.enabled) }
+    private var historyAction: Job? = null
     private val mutableSaveError = MutableStateFlow(false)
     val saveError = mutableSaveError.asStateFlow()
     private val engine = ThreatEngine()
@@ -72,11 +78,18 @@ class SentinelViewModel(application: Application) : AndroidViewModel(application
         val input = mutableScan.value.input
         if (mutableScan.value.error != null || mutableScan.value.busy) return
         val current = mutableScan.value
+        val historyTicket = historyRepository.ticket()
         mutableScan.value = current.copy(busy = true, result = null)
         analysisJob = viewModelScope.launch {
             try {
                 val result = withContext(Dispatchers.Default) { engine.analyse(input) }
                 mutableScan.value = current.copy(result = result, busy = false)
+                val saved = historyRepository.record(historyTicket, HistorySource.valueOf(current.source.name), result)
+                mutableScan.value = mutableScan.value.copy(historyNotice = when {
+                    saved -> "Encrypted metadata saved. Message text and URLs were not saved."
+                    history.value.error != null -> "Metadata could not be saved. Check History for recovery."
+                    else -> "No metadata saved for this scan."
+                })
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (_: Exception) {
@@ -88,6 +101,7 @@ class SentinelViewModel(application: Application) : AndroidViewModel(application
     fun clearScan() { analysisJob?.cancel(); mutableScan.value = ScanState(importId = mutableScan.value.importId) }
 
     fun set(key: Setting, enabled: Boolean) {
+        if (key == Setting.SAVE_HISTORY) { setHistoryEnabled(enabled); return }
         viewModelScope.launch {
             try {
                 repository.set(key, enabled)
@@ -99,4 +113,21 @@ class SentinelViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun dismissError() { mutableSaveError.value = false }
+    private fun historyCommand(action: suspend () -> Unit) {
+        if (historyAction?.isActive == true) return
+        historyAction = viewModelScope.launch { action() }
+    }
+    fun setHistoryEnabled(enabled: Boolean) = historyCommand { historyRepository.setEnabled(enabled) }
+    fun deleteHistory(id: String) = historyCommand { historyRepository.delete(id) }
+    fun deleteAllHistory() = historyCommand { historyRepository.deleteAll() }
+    fun refreshHistory() { viewModelScope.launch { historyRepository.refresh() } }
+    fun pauseAndClearSession() {
+        viewModelScope.launch {
+            try {
+                repository.set(Setting.MONITORING, false)
+                MonitorRuntime.clear(getApplication())
+                clearScan()
+            } catch (_: IOException) { mutableSaveError.value = true }
+        }
+    }
 }

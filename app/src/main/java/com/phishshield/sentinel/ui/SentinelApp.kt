@@ -22,6 +22,7 @@ import com.phishshield.sentinel.ScanState
 import com.phishshield.sentinel.monitor.*
 import androidx.compose.ui.platform.LocalContext
 import android.net.Uri
+import com.phishshield.sentinel.data.HistoryState
 
 private enum class Destination(val label: String, val icon: ImageVector) {
     Protection("Protection", Icons.Outlined.Shield),
@@ -35,6 +36,9 @@ fun SentinelApp(settings: UserSettings, saveError: Boolean = false,
     onDismissError: () -> Unit = {}, scan: ScanState = ScanState(),
     onInput: (String) -> Unit = {}, onAnalyse: () -> Unit = {}, onClear: () -> Unit = {},
     onQr: (String) -> Unit = {}, onQrImage: (Uri) -> Unit = {},
+    history: HistoryState = HistoryState(loaded = true), onHistoryEnabled: (Boolean) -> Unit = {},
+    onDeleteHistory: (String) -> Unit = {}, onDeleteAllHistory: () -> Unit = {},
+    onRefreshHistory: () -> Unit = {}, onPauseClear: () -> Unit = {},
     monitor: MonitorState = MonitorState(), alertToken: String? = null, onAlertHandled: () -> Unit = {},
     onSetting: (Setting, Boolean) -> Unit) {
     if (!settings.onboardingComplete) {
@@ -91,14 +95,15 @@ fun SentinelApp(settings: UserSettings, saveError: Boolean = false,
                         monitor.latest?.let { nav.navigate("Warning/${it.token}") { launchSingleTop = true } }
                     }
                 }
-                composable(Destination.Scan.name) { ScanScreen(scan, onInput, onAnalyse, onClear, onQr, onQrImage) }
-                composable(Destination.History.name) { History(settings.saveHistory) }
-                composable(Destination.Settings.name) { Settings(settings, onSetting) }
+                composable(Destination.Scan.name) { ScanScreen(scan, onInput, onAnalyse, onClear, onQr, onQrImage, history.enabled) }
+                composable(Destination.History.name) { HistoryScreen(history, onHistoryEnabled, onDeleteHistory, onDeleteAllHistory, onRefreshHistory) }
+                composable(Destination.Settings.name) { Settings(settings, onSetting, history, onHistoryEnabled, onPauseClear) }
                 composable("Warning/{token}") { entry ->
                     val detection = monitor.latest?.takeIf { it.token == entry.arguments?.getString("token") }
                     if (detection != null) ResultScreen(detection.result, detection.text,
                         onEdit = { nav.popBackStack() },
-                        onClear = { MonitorRuntime.clear(context); nav.popBackStack() }, notificationSource = detection.source)
+                        onClear = { MonitorRuntime.clear(context); nav.popBackStack() }, notificationSource = detection.source,
+                        historyNotice = "Full notification content stays in memory. If history was enabled when received, only metadata may be saved. Manage saved entries in History.")
                     else Page("Warning unavailable", "It was cleared, replaced or lost when the app process restarted.") {
                         Button(onClick = { nav.popBackStack() }) { Text("Back to protection") }
                     }
@@ -146,19 +151,8 @@ private fun Welcome(saveError: Boolean, onContinue: () -> Unit) {
 }
 
 @Composable
-private fun History(enabled: Boolean) {
-    Page("Detection history", "A private record, when you choose to keep one.") {
-        Icon(Icons.Outlined.History, contentDescription = null, modifier = Modifier.size(48.dp),
-            tint = MaterialTheme.colorScheme.primary)
-        Text("No detections yet", style = MaterialTheme.typography.titleLarge)
-        Text("Manual scans are not saved in this build. No messages or scan results have been stored in history.")
-        Info(if (enabled) "History preference enabled" else "History preference disabled",
-            "Your preference is saved. Persistent detection history and deletion controls follow in a later stage.")
-    }
-}
-
-@Composable
-private fun Settings(settings: UserSettings, onSetting: (Setting, Boolean) -> Unit) {
+private fun Settings(settings: UserSettings, onSetting: (Setting, Boolean) -> Unit,
+    history: HistoryState, onHistoryEnabled: (Boolean) -> Unit, onPauseClear: () -> Unit) {
     Page("Settings", "Choose your preferences. They are saved on this device.") {
         Text("Appearance", style = MaterialTheme.typography.titleLarge)
         Preference("Dark theme", "Switch between dark and light appearance.", settings.darkTheme) {
@@ -173,11 +167,12 @@ private fun Settings(settings: UserSettings, onSetting: (Setting, Boolean) -> Un
         Preference("SMS", "Available notifications; no direct inbox access", settings.sms) { onSetting(Setting.SMS, it) }
         HorizontalDivider()
         Text("Privacy", style = MaterialTheme.typography.titleLarge)
-        Preference("Save detection history", "Off by default. Applies when history is implemented.", settings.saveHistory) {
-            onSetting(Setting.SAVE_HISTORY, it)
-        }
-        Info("No network access", "No internet permission, cloud analysis or analytics. Camera access is used only for QR scanning. A chosen QR image is read locally, without saving the image. Preferences are saved locally; current scans and the latest notification warning remain in memory.")
-        Text("Sentinel 0.5.0 · QR and shared input\nTeam PhishShield", style = MaterialTheme.typography.bodySmall,
+        HistoryControl(history, onHistoryEnabled)
+        history.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        OutlinedButton(onClick = onPauseClear, modifier = Modifier.fillMaxWidth()) { Text("Pause monitoring and clear session") }
+        Text("Clears current scan and notification warning from memory. Saved metadata is deleted separately in History. Pausing does not revoke Android notification access.", style = MaterialTheme.typography.bodySmall)
+        Info("No network access", "No internet permission, cloud analysis or analytics. Camera access is used only for QR scanning. A chosen QR image is read locally without saving the image. Preferences are saved locally. History is off by default; only opted-in metadata is encrypted and stored. Full scan text and the latest notification warning stay in memory.")
+        Text("Sentinel 0.6.0 · Private history and evaluation\nTeam PhishShield", style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
