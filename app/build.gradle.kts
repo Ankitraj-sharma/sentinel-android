@@ -7,11 +7,14 @@ android {
     namespace = "com.phishshield.sentinel"
     compileSdk = 35
     defaultConfig {
-        applicationId = "com.phishshield.sentinel"
+        val isolated = providers.gradleProperty("isolatedValidation").orNull == "true"
+        applicationId = if (isolated) "com.phishshield.sentinel.validation" else "com.phishshield.sentinel"
+        resValue("string", "build_app_name", if (isolated) "Sentinel Preview" else "Sentinel")
+        buildConfigField("String", "DEMO_PACKAGE", "\"com.phishshield.sentinel.fixture${if (isolated) ".validation" else ""}\"")
         minSdk = 26
         targetSdk = 35
-        versionCode = 6
-        versionName = "0.6.0"
+        versionCode = 7
+        versionName = "0.7.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     compileOptions {
@@ -22,6 +25,7 @@ android {
     buildFeatures { compose = true; buildConfig = true }
 }
 dependencies {
+    implementation("androidx.core:core:1.13.1")
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation("com.google.zxing:core:3.5.3")
     implementation(project(":engine"))

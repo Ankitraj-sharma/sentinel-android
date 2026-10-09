@@ -42,7 +42,7 @@ class HistoryProducerTest {
             analyseAndVerify(HistorySource.SHARED_TEXT)
             instrumentation.runOnMainSync { model.importQr("https://paypal.com@evil.test/login") }
             analyseAndVerify(HistorySource.QR_CAMERA)
-            instrumentation.runOnMainSync { model.importQrImage(Uri.parse("content://com.phishshield.sentinel.test.qr/valid")) }
+            instrumentation.runOnMainSync { model.importQrImage(Uri.parse("content://${instrumentation.context.packageName}.qr/valid")) }
             waitFor("image actually decoded") { !model.scan.value.busy && model.scan.value.source == InputSource.QR_IMAGE && model.scan.value.input == "https://paypal.com@evil.test/login" }
             analyseAndVerify(HistorySource.QR_IMAGE)
             instrumentation.runOnMainSync { model.importQr("https://paypal.com@evil.test/login"); model.updateInput("Your appointment is tomorrow.") }

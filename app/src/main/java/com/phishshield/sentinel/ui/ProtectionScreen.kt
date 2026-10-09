@@ -94,6 +94,10 @@ fun ProtectionScreen(settings: UserSettings, state: MonitorState,
         Text("This session", style = MaterialTheme.typography.titleLarge)
         Text("Previews analysed: ${state.scanned} · Unassessed/skipped: ${state.skipped}")
         Text(state.lastEvent)
+        if (settings.monitoring && state.accessGranted && state.connected && selected) {
+            Text("To test automatic analysis, receive a new message while its source app is in the background. A message visible in an open chat may produce no Android notification. Normal messages increase the analysed count without posting a warning.")
+            if (state.scanned == 0) Text("No preview received yet? Check the source app's notification settings and preview visibility. In your phone's battery settings, allow Sentinel to run in the background. Hidden previews cannot be scanned.")
+        }
         state.latest?.let {
             Text("Latest warning · ${it.source} · ${it.result.level.label}", style = MaterialTheme.typography.titleMedium)
             Button(onClick = onDetails, modifier = Modifier.fillMaxWidth()) { Text("Review latest warning") }

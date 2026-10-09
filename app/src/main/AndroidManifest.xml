@@ -12,7 +12,7 @@
             <data android:scheme="smsto" />
         </intent>
     </queries>
-    <application android:allowBackup="false" android:label="@string/app_name"
+    <application android:allowBackup="false" android:label="@string/build_app_name"
         android:icon="@drawable/ic_sentinel" android:supportsRtl="true"
         android:theme="@style/Theme.Sentinel">
         <service android:name=".monitor.SentinelNotificationListener" android:exported="true"

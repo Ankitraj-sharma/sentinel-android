@@ -1,7 +1,7 @@
 package com.phishshield.sentinel.monitor
 
 import android.app.Notification
-import android.os.Build
+import androidx.core.app.NotificationCompat
 import com.phishshield.sentinel.engine.ThreatEngine
 
 data class NotificationText(val text: String, val unavailable: String? = null)
@@ -34,10 +34,9 @@ fun extractNotificationText(notification: Notification): NotificationText {
         val messages = extras.getParcelableArray(Notification.EXTRA_MESSAGES)
         if (messages != null) {
             if (messages.size > 64) throw IllegalArgumentException("Too many preview messages")
-            if (Build.VERSION.SDK_INT >= 30) {
-                Notification.MessagingStyle.Message.getMessagesFromBundleArray(messages).forEach { add(it.text) }
-            }
-            // Older Android falls back to public text/big-text/text-lines fields.
+            // AndroidX restores MessagingStyle across API 26+, without the API 30-only platform helper.
+            val style = NotificationCompat.MessagingStyle.extractMessagingStyleFromNotification(notification)
+            style?.messages?.forEach { add(it.text) }
         }
         val text = pieces.joinToString("\n")
         if (!hasBody || text.isBlank()) NotificationText("", "No readable preview body was provided. Hidden content was not assessed.")

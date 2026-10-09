@@ -32,7 +32,7 @@ class MonitorPipelineTest {
     }
     private fun post(kind: String) {
         Thread.sleep(350) // Keep synthetic traffic below Android's notification update rate limits.
-        shell("am start -W --activity-single-top -n com.phishshield.sentinel.fixture/.FixtureActivity --es kind $kind")
+        shell("am start -W --activity-single-top -n ${BuildConfig.DEMO_PACKAGE}/com.phishshield.sentinel.fixture.FixtureActivity --es kind $kind")
     }
     private fun main(action: () -> Unit) = instrumentation.runOnMainSync(action)
 
@@ -74,6 +74,20 @@ class MonitorPipelineTest {
             post("updated")
             waitFor("changed update reanalysed") { MonitorRuntime.state.value.latest?.token != first.token }
             assertNotNull(MonitorRuntime.state.value.latest)
+            post("giftcard")
+            waitFor("non-OTP scam produces automatic warning") {
+                MonitorRuntime.state.value.latest?.result?.signals?.any { it.id == "gift-card-request" } == true
+            }
+            post("known-url")
+            waitFor("bundled URL evidence reaches automatic warning") {
+                MonitorRuntime.state.value.latest?.result?.signals?.any { it.id == "listed-url" } == true
+            }
+            val beforeLocal = MonitorRuntime.state.value.scanned
+            val priorWarning = MonitorRuntime.state.value.latest?.token
+            post("local-url")
+            waitFor("legitimate local URL still analysed") { MonitorRuntime.state.value.scanned > beforeLocal }
+            assertEquals("weak URL traits do not issue a new warning", priorWarning, MonitorRuntime.state.value.latest?.token)
+            assertTrue(MonitorRuntime.state.value.lastEvent.contains("No obvious threat"))
             post("benign")
             waitFor("benign preview scanned") { MonitorRuntime.state.value.lastEvent.contains("No obvious threat") }
             post("shortener")
@@ -121,7 +135,7 @@ class MonitorPipelineTest {
             repository.set(Setting.MONITORING, before.monitoring)
             if (accessBefore) shell("cmd notification allow_listener $component")
             main { MonitorRuntime.clear(context); MonitorRuntime.refresh(context) }
-            shell("am force-stop com.phishshield.sentinel.fixture")
+            shell("am force-stop ${BuildConfig.DEMO_PACKAGE}")
         }
     }
 }

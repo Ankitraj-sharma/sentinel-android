@@ -25,7 +25,7 @@ class MainActivity : ComponentActivity() {
     private fun readAlertToken(intent: Intent): String? = try { intent.getStringExtra(AlertNotifier.TOKEN_EXTRA) } catch (_: RuntimeException) { null }
     private val model: SentinelViewModel by viewModels()
     private var alertToken by mutableStateOf<String?>(null)
-    override fun onResume() { super.onResume(); MonitorRuntime.refresh(this); model.refreshHistory() }
+    override fun onResume() { super.onResume(); MonitorRuntime.ensureConnected(this); model.refreshHistory() }
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent); setIntent(intent)
         alertToken = readAlertToken(intent)

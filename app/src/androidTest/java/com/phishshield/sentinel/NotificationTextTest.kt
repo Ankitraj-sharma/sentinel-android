@@ -38,4 +38,16 @@ class NotificationTextTest {
         assertNotNull(result.unavailable)
         assertEquals("", result.text)
     }
+
+    @Test fun messagingOnlyBundleIsReadWithoutFallbackText() {
+        val messaging = Notification.Builder(context, "test").setStyle(Notification.MessagingStyle("Demo")
+            .addMessage("Buy gift cards and send the codes", 1L, "Sender")).build().apply {
+            extras.remove(Notification.EXTRA_TEXT)
+            extras.remove(Notification.EXTRA_BIG_TEXT)
+            extras.remove(Notification.EXTRA_TEXT_LINES)
+        }
+        val preview = extractNotificationText(messaging)
+        assertNull(preview.unavailable)
+        assertTrue(preview.text.contains("send the codes"))
+    }
 }

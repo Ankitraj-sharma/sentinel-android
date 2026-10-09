@@ -5,6 +5,7 @@ import android.provider.Telephony
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import com.phishshield.sentinel.BuildConfig
+import com.phishshield.sentinel.LocalThreatEngine
 import com.phishshield.sentinel.data.SettingsRepository
 import com.phishshield.sentinel.data.UserSettings
 import com.phishshield.sentinel.data.HistoryRepository
@@ -21,7 +22,8 @@ class SentinelNotificationListener : NotificationListenerService() {
     private var policy = NotificationPolicy(false, emptySet())
     private var generation = 0L
     private val deduplicator = NotificationDeduplicator()
-    private val engine = ThreatEngine()
+    private val settingsReady = CompletableDeferred<Unit>()
+    private var startingEvents = 0
     private data class Preview(val generation: Long, val owner: String, val key: String,
         val text: NotificationText, val receivedAt: Long, val historyTicket: HistoryTicket?)
 
@@ -32,6 +34,7 @@ class SentinelNotificationListener : NotificationListenerService() {
             SettingsRepository(applicationContext).settings.collect { next ->
                 settings = next
                 refreshPolicy(next)
+                settingsReady.complete(Unit)
             }
         }
         scope.launch {
@@ -44,6 +47,7 @@ class SentinelNotificationListener : NotificationListenerService() {
                 }
                 if (deduplicator.duplicate(preview.key, preview.text.text)) continue
                 val result = try {
+                    val engine = LocalThreatEngine.get(applicationContext)
                     withContext(Dispatchers.Default) { engine.analyse(preview.text.text) }
                 } catch (cancelled: CancellationException) { throw cancelled }
                 catch (_: Exception) {
@@ -57,14 +61,14 @@ class SentinelNotificationListener : NotificationListenerService() {
                 val historySource = when (preview.owner) {
                     "com.whatsapp", "com.whatsapp.w4b" -> HistorySource.WHATSAPP
                     "com.google.android.gm" -> HistorySource.GMAIL
-                    "com.phishshield.sentinel.fixture" -> HistorySource.SYNTHETIC_DEMO
+                    BuildConfig.DEMO_PACKAGE -> HistorySource.SYNTHETIC_DEMO
                     else -> HistorySource.SMS
                 }
                 if (limited.level == RiskLevel.HIGH || limited.level == RiskLevel.REVIEW) {
                     val source = when (preview.owner) {
                         "com.whatsapp", "com.whatsapp.w4b" -> "WhatsApp"
                         "com.google.android.gm" -> "Gmail"
-                        "com.phishshield.sentinel.fixture" -> "Synthetic demo"
+                        BuildConfig.DEMO_PACKAGE -> "Synthetic demo"
                         else -> "Default SMS app"
                     }
                     val detection = NotificationDetection(UUID.randomUUID().toString(), source, preview.text.text, limited, preview.receivedAt)
@@ -90,7 +94,7 @@ class SentinelNotificationListener : NotificationListenerService() {
             if (next.whatsapp) { add("com.whatsapp"); add("com.whatsapp.w4b") }
             if (next.gmail) add("com.google.android.gm")
             if (next.sms) Telephony.Sms.getDefaultSmsPackage(applicationContext)?.let(::add)
-            if (BuildConfig.DEBUG && next.demoSource) add("com.phishshield.sentinel.fixture")
+            if (BuildConfig.DEBUG && next.demoSource) add(BuildConfig.DEMO_PACKAGE)
         }
         val updated = NotificationPolicy(next.monitoring && next.onboardingComplete, packages)
         if (updated != policy) {
@@ -112,9 +116,30 @@ class SentinelNotificationListener : NotificationListenerService() {
         deduplicator.clear(); drain()
         MonitorRuntime.update { it.copy(connected = false) }
         MonitorRuntime.clear(this)
+        if (settings?.monitoring == true) scope.launch {
+            delay(1_000)
+            if (settings?.monitoring == true) MonitorRuntime.ensureConnected(this@SentinelNotificationListener)
+        }
         super.onListenerDisconnected()
     }
     override fun onNotificationPosted(sbn: StatusBarNotification) {
+        if (settings == null) {
+            if (startingEvents >= 16) return
+            startingEvents++
+            // Do not silently drop the first delivered event while DataStore initialises.
+            val eventGeneration = generation
+            scope.launch {
+                try {
+                    settingsReady.await()
+                    if (generation == eventGeneration || generation == eventGeneration + 1) acceptNotification(sbn)
+                } finally { startingEvents-- }
+            }
+            return
+        }
+        acceptNotification(sbn)
+    }
+
+    private fun acceptNotification(sbn: StatusBarNotification) {
         if (settings == null || !MonitorRuntime.state.value.connected) return
         // Re-resolve default SMS owner before accepting any event; never inspect a previous default's fields.
         refreshPolicy(settings!!)

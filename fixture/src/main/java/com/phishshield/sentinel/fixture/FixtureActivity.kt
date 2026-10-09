@@ -30,7 +30,7 @@ class FixtureActivity : Activity() {
         layout.addView(Button(this).apply { text = "Allow demo notifications"; setOnClickListener {
             if (Build.VERSION.SDK_INT >= 33) requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 77)
         } })
-        for (kind in listOf("scam", "benign", "shortener", "updated", "hidden", "group", "ongoing")) {
+        for (kind in listOf("scam", "giftcard", "known-url", "local-url", "benign", "shortener", "updated", "hidden", "group", "ongoing")) {
             layout.addView(Button(this).apply { text = "Post $kind preview"; setOnClickListener { post(kind) } })
         }
         setContentView(layout)
@@ -40,6 +40,9 @@ class FixtureActivity : Activity() {
         val body = when (kind) {
             "scam" -> "Send your OTP to our agent immediately https://paypal.com.evil.test"
             "updated" -> "PayPal account suspended. Act now https://paypal.com.evil.test"
+            "giftcard" -> "I am your boss. Buy gift cards and send the codes"
+            "known-url" -> "Visit br-icloud.com.br to sign in"
+            "local-url" -> "http://192.168.1.1"
             "shortener" -> "https://bit.ly/demo"
             "hidden" -> ""
             else -> "Your appointment is tomorrow at 10."
