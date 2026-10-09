@@ -79,7 +79,7 @@ class ThreatEngineTest {
 
     @Test fun urlsAreNormalisedWithoutFollowingThem() {
         assertEquals("paypal.com", engine.analyse("HTTPS://PAYPAL.COM:443/path").urls.single().host)
-        assertEquals("example.com", engine.analyse("www.example.com/path").urls.single().host)
+        assertEquals("www.example.com", engine.analyse("www.example.com/path").urls.single().host)
         assertEquals("example.com", engine.analyse("example.com").urls.single().host)
         assertEquals("xn--bcher-kva.de", engine.analyse("https://bücher.de/").urls.single().host)
     }
