@@ -16,7 +16,7 @@ import java.io.File
 class InputImportTest {
     @Test fun contentUriReadingEnforcesByteDimensionAndFormatBounds() {
         val resolver = InstrumentationRegistry.getInstrumentation().targetContext.contentResolver
-        assertEquals("https://example.org", QrImageDecoder.read(resolver, android.net.Uri.parse("content://com.phishshield.sentinel.test.qr/valid")))
+        assertEquals("https://paypal.com@evil.test/login", QrImageDecoder.read(resolver, android.net.Uri.parse("content://com.phishshield.sentinel.test.qr/valid")))
         for ((path, expected) in listOf("large" to "12 MB", "dimensions" to "dimensions", "invalid" to "format")) {
             try { QrImageDecoder.read(resolver, android.net.Uri.parse("content://com.phishshield.sentinel.test.qr/$path")); fail(path) }
             catch (failure: QrImportException) { assertTrue("$path: ${failure.message}", failure.message!!.contains(expected)) }
