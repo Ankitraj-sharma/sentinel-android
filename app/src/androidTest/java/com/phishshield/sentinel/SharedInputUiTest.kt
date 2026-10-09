@@ -16,7 +16,11 @@ class SharedInputUiTest {
         if (compose.onAllNodesWithText("Explore Sentinel").fetchSemanticsNodes().isNotEmpty()) compose.onNodeWithText("Explore Sentinel").performScrollTo().performClick()
     }
     private fun share(text: String) {
-        compose.activity.runOnUiThread { compose.activity.onNewIntent(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)) }
+        compose.activity.runOnUiThread {
+            compose.activity.startActivity(Intent(Intent.ACTION_SEND).setType("text/plain")
+                .setClass(compose.activity, MainActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP).putExtra(Intent.EXTRA_TEXT, text))
+        }
     }
     @Test fun warmShareRequiresReviewAndReplacesStaleVerdictWithoutRotationReplay() {
         ready()
