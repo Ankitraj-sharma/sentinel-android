@@ -5,6 +5,9 @@ import android.content.Intent
 import com.phishshield.sentinel.monitor.AlertNotifier
 import com.phishshield.sentinel.monitor.MonitorRuntime
 import androidx.activity.ComponentActivity
+import androidx.activity.viewModels
+import com.phishshield.sentinel.input.readSharedInput
+import com.phishshield.sentinel.engine.InputSource
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.SystemBarStyle
@@ -19,18 +22,20 @@ import com.phishshield.sentinel.ui.SentinelApp
 import com.phishshield.sentinel.ui.SentinelTheme
 
 class MainActivity : ComponentActivity() {
+    private val model: SentinelViewModel by viewModels()
     private var alertToken by mutableStateOf<String?>(null)
     override fun onResume() { super.onResume(); MonitorRuntime.refresh(this) }
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent); setIntent(intent)
         alertToken = intent.getStringExtra(AlertNotifier.TOKEN_EXTRA)
+        readSharedInput(intent)?.let { model.importContent(it, InputSource.SHARED_TEXT) }
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         alertToken = intent.getStringExtra(AlertNotifier.TOKEN_EXTRA)
+        if (savedInstanceState == null) readSharedInput(intent)?.let { model.importContent(it, InputSource.SHARED_TEXT) }
         enableEdgeToEdge()
         setContent {
-            val model: SentinelViewModel = viewModel()
             val settings by model.settings.collectAsStateWithLifecycle(initialValue = null)
             val saveError by model.saveError.collectAsStateWithLifecycle()
             val scan by model.scan.collectAsStateWithLifecycle()
@@ -54,6 +59,7 @@ class MainActivity : ComponentActivity() {
                     SentinelApp(loaded, saveError, onDismissError = model::dismissError,
                         scan = scan, onInput = model::updateInput, onAnalyse = model::analyse,
                         onClear = model::clearScan, onSetting = model::set, monitor = monitor,
+                        onQr = model::importQr, onQrImage = model::importQrImage,
                         alertToken = alertToken, onAlertHandled = { alertToken = null; intent.removeExtra(AlertNotifier.TOKEN_EXTRA) })
                 }
             }

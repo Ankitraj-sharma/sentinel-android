@@ -21,6 +21,7 @@ import com.phishshield.sentinel.data.UserSettings
 import com.phishshield.sentinel.ScanState
 import com.phishshield.sentinel.monitor.*
 import androidx.compose.ui.platform.LocalContext
+import android.net.Uri
 
 private enum class Destination(val label: String, val icon: ImageVector) {
     Protection("Protection", Icons.Outlined.Shield),
@@ -33,6 +34,7 @@ private enum class Destination(val label: String, val icon: ImageVector) {
 fun SentinelApp(settings: UserSettings, saveError: Boolean = false,
     onDismissError: () -> Unit = {}, scan: ScanState = ScanState(),
     onInput: (String) -> Unit = {}, onAnalyse: () -> Unit = {}, onClear: () -> Unit = {},
+    onQr: (String) -> Unit = {}, onQrImage: (Uri) -> Unit = {},
     monitor: MonitorState = MonitorState(), alertToken: String? = null, onAlertHandled: () -> Unit = {},
     onSetting: (Setting, Boolean) -> Unit) {
     if (!settings.onboardingComplete) {
@@ -42,6 +44,12 @@ fun SentinelApp(settings: UserSettings, saveError: Boolean = false,
     val nav = rememberNavController()
     val context = LocalContext.current
     var expiredAlert by remember { mutableStateOf(false) }
+    LaunchedEffect(scan.importId) {
+        if (scan.importId > 0) nav.navigate(Destination.Scan.name) {
+            popUpTo(nav.graph.findStartDestination().id)
+            launchSingleTop = true
+        }
+    }
     LaunchedEffect(alertToken) {
         if (alertToken != null) {
             if (monitor.latest?.token == alertToken) nav.navigate("Warning/$alertToken") { launchSingleTop = true }
@@ -83,7 +91,7 @@ fun SentinelApp(settings: UserSettings, saveError: Boolean = false,
                         monitor.latest?.let { nav.navigate("Warning/${it.token}") { launchSingleTop = true } }
                     }
                 }
-                composable(Destination.Scan.name) { ScanScreen(scan, onInput, onAnalyse, onClear) }
+                composable(Destination.Scan.name) { ScanScreen(scan, onInput, onAnalyse, onClear, onQr, onQrImage) }
                 composable(Destination.History.name) { History(settings.saveHistory) }
                 composable(Destination.Settings.name) { Settings(settings, onSetting) }
                 composable("Warning/{token}") { entry ->
@@ -126,7 +134,7 @@ private fun Welcome(saveError: Boolean, onContinue: () -> Unit) {
             Text("Understand suspicious messages.", style = MaterialTheme.typography.headlineMedium)
             Text("Designed for on-device scam analysis with clear explanations and access you control.",
                 style = MaterialTheme.typography.bodyLarge)
-            Info("Local protection", "Manually analyse messages and links, or opt in to supported notification preview analysis. QR scanning follows later.")
+            Info("Local protection", "Analyse messages and links, scan a web QR code, receive shared text, or opt in to supported notification preview analysis.")
             Text("Notification access is optional and set up separately. Selected previews are read locally; nothing is uploaded.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (saveError) Text("Could not save setup. Please try again.",
@@ -168,8 +176,8 @@ private fun Settings(settings: UserSettings, onSetting: (Setting, Boolean) -> Un
         Preference("Save detection history", "Off by default. Applies when history is implemented.", settings.saveHistory) {
             onSetting(Setting.SAVE_HISTORY, it)
         }
-        Info("No network access", "No internet permission, cloud analysis or analytics. Preferences are saved locally; current scans and the latest notification warning remain in memory.")
-        Text("Sentinel 0.4.0 · Local notification protection\nTeam PhishShield", style = MaterialTheme.typography.bodySmall,
+        Info("No network access", "No internet permission, cloud analysis or analytics. Camera access is used only for QR scanning. A chosen QR image is read locally, without saving the image. Preferences are saved locally; current scans and the latest notification warning remain in memory.")
+        Text("Sentinel 0.5.0 · QR and shared input\nTeam PhishShield", style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
