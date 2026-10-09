@@ -18,9 +18,9 @@ data class AnalysisResult(val level: RiskLevel, val status: AnalysisStatus,
 data class Brand(val name: String, val domains: Set<String>)
 object BrandExamples {
     val entries = listOf(
-        Brand("PayPal", setOf("paypal.com")),
+        Brand("PayPal", setOf("paypal.com", "paypalobjects.com")),
         Brand("SBI", setOf("sbi.bank.in", "sbi.co.in", "onlinesbi.sbi")),
-        Brand("Google", setOf("google.com", "accounts.google.com")),
+        Brand("Google", setOf("google.com", "accounts.google.com", "googleapis.com", "googleusercontent.com", "gstatic.com")),
         Brand("Microsoft", setOf("microsoft.com", "live.com", "microsoftonline.com")),
     )
 }

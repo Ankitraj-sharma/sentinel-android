@@ -34,7 +34,6 @@ class SentinelViewModel(application: Application) : AndroidViewModel(application
     private var historyAction: Job? = null
     private val mutableSaveError = MutableStateFlow(false)
     val saveError = mutableSaveError.asStateFlow()
-    private val engine = ThreatEngine()
     private val mutableScan = MutableStateFlow(ScanState())
     val scan = mutableScan.asStateFlow()
     private var analysisJob: Job? = null
@@ -82,6 +81,7 @@ class SentinelViewModel(application: Application) : AndroidViewModel(application
         mutableScan.value = current.copy(busy = true, result = null)
         analysisJob = viewModelScope.launch {
             try {
+                val engine = LocalThreatEngine.get(getApplication())
                 val result = withContext(Dispatchers.Default) { engine.analyse(input) }
                 mutableScan.value = current.copy(result = result, busy = false)
                 val saved = historyRepository.record(historyTicket, HistorySource.valueOf(current.source.name), result)
@@ -105,6 +105,7 @@ class SentinelViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             try {
                 repository.set(key, enabled)
+                if (key == Setting.MONITORING && enabled) MonitorRuntime.ensureConnected(getApplication())
                 mutableSaveError.value = false
             } catch (_: IOException) {
                 mutableSaveError.value = true

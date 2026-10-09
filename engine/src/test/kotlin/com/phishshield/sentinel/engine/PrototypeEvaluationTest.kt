@@ -13,7 +13,8 @@ class PrototypeEvaluationTest {
         assertTrue(cases.all { it.text.length in 1..ThreatEngine.MAX_INPUT })
         val observed = PrototypeEvaluation.observe()
         assertEquals(40, observed.size)
-        assertTrue(observed.any { it.case.label == "SCAM" && !it.warned })
+        // Diagnostics must report actual outcomes; improved coverage may eliminate these authored misses.
+        assertEquals(16, observed.count { it.case.label == "SCAM" })
         assertTrue(observed.any { it.case.label == "BENIGN" && it.warned })
         val report = PrototypeEvaluation.report(observed)
         assertTrue(report.contains("not real user data"))

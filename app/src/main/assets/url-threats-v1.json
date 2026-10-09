@@ -1,0 +1,17 @@
+{
+  "source": "https://www.kaggle.com/datasets/sid321axn/malicious-urls-dataset",
+  "attribution": "Malicious URLs dataset by Manu Siddhartha (sid321axn), Kaggle version 1",
+  "license": "CC0: Public Domain (Kaggle metadata)",
+  "dataset_sha256": "d83ce942075dd63ed4d11560cfdcd9d512caa3d680e292f22cab484e8f074d01",
+  "input_labels": {
+    "phishing": 94111,
+    "benign": 428103,
+    "defacement": 96457,
+    "malware": 32520
+  },
+  "skipped_rows": 340,
+  "indexed_urls": 207970,
+  "conflicting_benign_urls_omitted": 4044,
+  "index_sha256": "01c259ae3d8ea3343a02f61807cebcbd3c61ca644942f4c47210bb646184f453",
+  "scope": "Historical exact URL matches only. Absence does not establish safety. Not independent evaluation."
+}

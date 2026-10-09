@@ -9,7 +9,14 @@ enum class HistoryRule(val code: String, val label: String) {
     ACCOUNT("account-threat", "Account restriction threat"), PRIZE("prize-payment", "Payment linked to a prize"),
     FEE("advance-fee", "Fee requested before a benefit"), USERINFO("url-userinfo", "Destination obscured by user information"),
     HTTP("unencrypted-url", "Unencrypted connection"), NUMERIC("numeric-host", "Numeric destination"),
-    BRAND("brand-domain-mismatch", "Possible brand impersonation")
+    BRAND("brand-domain-mismatch", "Possible brand impersonation"),
+    LISTED_URL("listed-url", "Historical threat URL match"),
+    INVESTMENT("investment-return", "Unrealistic investment return promise"),
+    GIFT_CARD("gift-card-request", "Gift card purchase and code request"),
+    DELIVERY("delivery-action", "Delivery problem with a linked action"),
+    REFUND("refund-action", "Refund claim with a linked action"),
+    REMOTE_ACCESS("remote-access", "Request to install remote access software"),
+    JOB_DEPOSIT("job-deposit", "Payment requested to obtain a job")
 }
 /** No free-form text or destination field: raw content cannot enter persisted metadata. */
 data class HistoryRecord(val id: String, val timeMillis: Long, val source: HistorySource,
