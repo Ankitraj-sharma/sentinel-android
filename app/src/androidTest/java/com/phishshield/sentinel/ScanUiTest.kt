@@ -31,6 +31,6 @@ class ScanUiTest {
         compose.onNodeWithText("No obvious threat detected").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Clear").performScrollTo().performClick()
         compose.onNodeWithText("No obvious threat detected").assertDoesNotExist()
-        compose.onNode(hasSetTextAction()).assertTextContains("")
+        compose.onNodeWithText("0 / 20000 characters · Not saved to history").assertExists()
     }
 }

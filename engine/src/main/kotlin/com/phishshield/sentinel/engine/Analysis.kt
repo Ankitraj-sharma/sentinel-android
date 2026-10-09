@@ -19,7 +19,7 @@ data class Brand(val name: String, val domains: Set<String>)
 object BrandExamples {
     val entries = listOf(
         Brand("PayPal", setOf("paypal.com")),
-        Brand("SBI", setOf("sbi.co.in", "onlinesbi.sbi")),
+        Brand("SBI", setOf("sbi.bank.in", "sbi.co.in", "onlinesbi.sbi")),
         Brand("Google", setOf("google.com", "accounts.google.com")),
         Brand("Microsoft", setOf("microsoft.com", "live.com", "microsoftonline.com")),
     )

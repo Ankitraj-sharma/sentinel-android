@@ -50,9 +50,10 @@ class ThreatEngine(private val brands: List<Brand> = BrandExamples.entries) {
             advanceFee.findAll(text).firstOrNull { !isNegated(text, it.range.first) }, 25)
 
         val normalisationChanged = text != input
-        val explicit = (links.findAll(input) + if (normalisationChanged) links.findAll(text) else emptySequence()).toList()
+        val normalisedLinks = links.findAll(text).toList()
+        val explicit = (links.findAll(input) + if (normalisationChanged) normalisedLinks.asSequence() else emptySequence()).toList()
         val inline = inlineDomains.findAll(text).filter { candidate ->
-            explicit.none { it.range.first <= candidate.range.first && it.range.last >= candidate.range.last }
+            normalisedLinks.none { it.range.first <= candidate.range.first && it.range.last >= candidate.range.last }
         }
         val extracted = (explicit.asSequence().map { it.value } + inline.map { it.value }).map(::trimLink).distinct().toList()
         val rawUrls = if (extracted.isNotEmpty()) extracted else {
