@@ -42,7 +42,7 @@ fun ScanScreen(state: ScanState, onInput: (String) -> Unit, onAnalyse: () -> Uni
         TextButton(onClick = { keyboard?.hide(); onClear() }, modifier = Modifier.fillMaxWidth(), enabled = state.input.isNotEmpty() || state.result != null) { Text("Clear") }
         if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
         HorizontalDivider()
-        Text("QR scanning, shared input and automatic notification protection will follow. This prototype uses local rules, not a trained ML model.",
+        Text("QR scanning and shared input will follow. Optional notification protection is configured in Protection. This prototype uses local rules, not a trained ML model.",
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

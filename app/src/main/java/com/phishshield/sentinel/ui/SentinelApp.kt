@@ -19,6 +19,8 @@ import androidx.navigation.compose.*
 import com.phishshield.sentinel.data.Setting
 import com.phishshield.sentinel.data.UserSettings
 import com.phishshield.sentinel.ScanState
+import com.phishshield.sentinel.monitor.*
+import androidx.compose.ui.platform.LocalContext
 
 private enum class Destination(val label: String, val icon: ImageVector) {
     Protection("Protection", Icons.Outlined.Shield),
@@ -31,19 +33,29 @@ private enum class Destination(val label: String, val icon: ImageVector) {
 fun SentinelApp(settings: UserSettings, saveError: Boolean = false,
     onDismissError: () -> Unit = {}, scan: ScanState = ScanState(),
     onInput: (String) -> Unit = {}, onAnalyse: () -> Unit = {}, onClear: () -> Unit = {},
+    monitor: MonitorState = MonitorState(), alertToken: String? = null, onAlertHandled: () -> Unit = {},
     onSetting: (Setting, Boolean) -> Unit) {
     if (!settings.onboardingComplete) {
         Welcome(saveError) { onSetting(Setting.ONBOARDING, true) }
         return
     }
     val nav = rememberNavController()
+    val context = LocalContext.current
+    var expiredAlert by remember { mutableStateOf(false) }
+    LaunchedEffect(alertToken) {
+        if (alertToken != null) {
+            if (monitor.latest?.token == alertToken) nav.navigate("Warning/$alertToken") { launchSingleTop = true }
+            else { expiredAlert = true; nav.navigate(Destination.Protection.name) { launchSingleTop = true } }
+            onAlertHandled()
+        }
+    }
     val backStack by nav.currentBackStackEntryAsState()
     val route = backStack?.destination?.route ?: Destination.Protection.name
     Scaffold(bottomBar = {
         NavigationBar {
             Destination.entries.forEach { destination ->
                 NavigationBarItem(
-                    selected = route == destination.name,
+                    selected = route == destination.name || route.startsWith("Warning/") && destination == Destination.Protection,
                     onClick = { nav.navigate(destination.name) {
                         popUpTo(nav.graph.findStartDestination().id) { saveState = true }
                         launchSingleTop = true
@@ -56,6 +68,10 @@ fun SentinelApp(settings: UserSettings, saveError: Boolean = false,
         }
     }) { padding ->
         Column(Modifier.padding(padding)) {
+            if (expiredAlert) {
+                Text("That warning is no longer available. Notification results are held only in memory.", Modifier.padding(16.dp))
+                TextButton(onClick = { expiredAlert = false }) { Text("Dismiss warning notice") }
+            }
             if (saveError) {
                 Text("Settings could not be saved. Please try again.", Modifier.padding(16.dp),
                     color = MaterialTheme.colorScheme.error)
@@ -63,11 +79,22 @@ fun SentinelApp(settings: UserSettings, saveError: Boolean = false,
             }
             NavHost(nav, startDestination = Destination.Protection.name) {
                 composable(Destination.Protection.name) {
-                    Protection { nav.navigate(Destination.Settings.name) { launchSingleTop = true } }
+                    ProtectionScreen(settings, monitor, onSetting) {
+                        monitor.latest?.let { nav.navigate("Warning/${it.token}") { launchSingleTop = true } }
+                    }
                 }
                 composable(Destination.Scan.name) { ScanScreen(scan, onInput, onAnalyse, onClear) }
                 composable(Destination.History.name) { History(settings.saveHistory) }
                 composable(Destination.Settings.name) { Settings(settings, onSetting) }
+                composable("Warning/{token}") { entry ->
+                    val detection = monitor.latest?.takeIf { it.token == entry.arguments?.getString("token") }
+                    if (detection != null) ResultScreen(detection.result, detection.text,
+                        onEdit = { nav.popBackStack() },
+                        onClear = { MonitorRuntime.clear(context); nav.popBackStack() }, notificationSource = detection.source)
+                    else Page("Warning unavailable", "It was cleared, replaced or lost when the app process restarted.") {
+                        Button(onClick = { nav.popBackStack() }) { Text("Back to protection") }
+                    }
+                }
             }
         }
     }
@@ -99,36 +126,14 @@ private fun Welcome(saveError: Boolean, onContinue: () -> Unit) {
             Text("Understand suspicious messages.", style = MaterialTheme.typography.headlineMedium)
             Text("Designed for on-device scam analysis with clear explanations and access you control.",
                 style = MaterialTheme.typography.bodyLarge)
-            Info("Local analysis preview", "Manually analyse messages and links with explained local rules. Automatic monitoring and QR scanning are not available yet.")
-            Text("No message access is requested in this build. Settings stay on this device.",
+            Info("Local protection", "Manually analyse messages and links, or opt in to supported notification preview analysis. QR scanning follows later.")
+            Text("Notification access is optional and set up separately. Selected previews are read locally; nothing is uploaded.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (saveError) Text("Could not save setup. Please try again.",
                 color = MaterialTheme.colorScheme.error)
             Button(onClick = onContinue, modifier = Modifier.fillMaxWidth()) { Text("Explore Sentinel") }
             Text("Team PhishShield · Code Carnival 3.0", style = MaterialTheme.typography.labelMedium)
         }
-    }
-}
-
-@Composable
-private fun Protection(onSettings: () -> Unit) {
-    Page("Your protection", "On-device analysis. Evidence you can understand.") {
-        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) {
-            Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Icon(Icons.Outlined.Shield, contentDescription = null, Modifier.size(40.dp),
-                    tint = MaterialTheme.colorScheme.primary)
-                Text("Protection not active", style = MaterialTheme.typography.headlineSmall)
-                Text("Local message and URL analysis is available in Scan. Automatic notification monitoring is not active in this build.")
-                OutlinedButton(onClick = onSettings) { Text("Configure preferences") }
-            }
-        }
-        Text("How protection will work", style = MaterialTheme.typography.titleLarge)
-        Info("01 · Detect", "Analyse available text and links from supported notifications after you grant access.")
-        Info("02 · Explain", "Show suspicious signals and the evidence behind a warning.")
-        Info("03 · Act", "Help you verify a request before opening a link or sharing information.")
-        HorizontalDivider()
-        Text("Notification access will not provide complete access to private chats or inboxes.",
-            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -152,8 +157,8 @@ private fun Settings(settings: UserSettings, onSetting: (Setting, Boolean) -> Un
             onSetting(Setting.DARK_THEME, it)
         }
         HorizontalDivider()
-        Text("Future notification sources", style = MaterialTheme.typography.titleLarge)
-        Text("These selections do not grant access or activate monitoring. Source coverage depends on available notification content.",
+        Text("Notification sources", style = MaterialTheme.typography.titleLarge)
+        Text("Enable monitoring and manage notification access in Protection. Coverage depends on available preview content.",
             color = MaterialTheme.colorScheme.onSurfaceVariant)
         Preference("WhatsApp", "Available notification text", settings.whatsapp) { onSetting(Setting.WHATSAPP, it) }
         Preference("Gmail", "Notification previews; inbox connection is separate", settings.gmail) { onSetting(Setting.GMAIL, it) }
@@ -163,8 +168,8 @@ private fun Settings(settings: UserSettings, onSetting: (Setting, Boolean) -> Un
         Preference("Save detection history", "Off by default. Applies when history is implemented.", settings.saveHistory) {
             onSetting(Setting.SAVE_HISTORY, it)
         }
-        Info("No network access", "This build has no internet permission, cloud analysis or analytics. Only your preferences are saved locally.")
-        Text("Sentinel 0.3.0 · Explained local analysis\nTeam PhishShield", style = MaterialTheme.typography.bodySmall,
+        Info("No network access", "No internet permission, cloud analysis or analytics. Preferences are saved locally; current scans and the latest notification warning remain in memory.")
+        Text("Sentinel 0.4.0 · Local notification protection\nTeam PhishShield", style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

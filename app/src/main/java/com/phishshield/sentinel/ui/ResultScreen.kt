@@ -19,7 +19,8 @@ import androidx.compose.ui.unit.dp
 import com.phishshield.sentinel.engine.*
 
 @Composable
-fun ResultScreen(result: AnalysisResult, input: String, onEdit: () -> Unit, onClear: () -> Unit) {
+fun ResultScreen(result: AnalysisResult, input: String, onEdit: () -> Unit, onClear: () -> Unit,
+    notificationSource: String? = null) {
     val explanation = remember(result) { result.explain() }
     val color = when (result.level) {
         RiskLevel.HIGH -> MaterialTheme.colorScheme.error
@@ -33,7 +34,7 @@ fun ResultScreen(result: AnalysisResult, input: String, onEdit: () -> Unit, onCl
     }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)) {
-        Text("SCAN RESULT · ON DEVICE", style = MaterialTheme.typography.labelLarge,
+        Text(notificationSource?.let { "NOTIFICATION · $it" } ?: "SCAN RESULT · ON DEVICE", style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary)
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -45,7 +46,7 @@ fun ResultScreen(result: AnalysisResult, input: String, onEdit: () -> Unit, onCl
                 result.ruleScore?.let { Text("Rule score: $it / 100 · Not a probability") }
             }
         }
-        OutlinedButton(onClick = onEdit, modifier = Modifier.fillMaxWidth()) { Text("Edit message") }
+        OutlinedButton(onClick = onEdit, modifier = Modifier.fillMaxWidth()) { Text(if (notificationSource == null) "Edit message" else "Back to protection") }
         SectionTitle("What to do next")
         Text(result.nextAction, style = MaterialTheme.typography.bodyLarge)
         Expandable("Verification checklist") {
@@ -107,9 +108,10 @@ fun ResultScreen(result: AnalysisResult, input: String, onEdit: () -> Unit, onCl
             }
             SelectionContainer { Text(annotated) }
         }
-        Text("This scan is held in memory and is not saved to history. Clear removes it from the current scan.",
+        Text(if (notificationSource == null) "This scan is held in memory and is not saved to history. Clear removes it from the current scan."
+            else "This warning is held in memory, not saved to history. Clear removes this warning and its system alert.",
             style = MaterialTheme.typography.bodySmall)
-        OutlinedButton(onClick = onClear, modifier = Modifier.fillMaxWidth()) { Text("Clear scan") }
+        OutlinedButton(onClick = onClear, modifier = Modifier.fillMaxWidth()) { Text(if (notificationSource == null) "Clear scan" else "Clear warning") }
     }
 }
 

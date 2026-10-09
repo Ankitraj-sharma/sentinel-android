@@ -1,6 +1,9 @@
 package com.phishshield.sentinel
 
 import android.os.Bundle
+import android.content.Intent
+import com.phishshield.sentinel.monitor.AlertNotifier
+import com.phishshield.sentinel.monitor.MonitorRuntime
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -16,14 +19,22 @@ import com.phishshield.sentinel.ui.SentinelApp
 import com.phishshield.sentinel.ui.SentinelTheme
 
 class MainActivity : ComponentActivity() {
+    private var alertToken by mutableStateOf<String?>(null)
+    override fun onResume() { super.onResume(); MonitorRuntime.refresh(this) }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent); setIntent(intent)
+        alertToken = intent.getStringExtra(AlertNotifier.TOKEN_EXTRA)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        alertToken = intent.getStringExtra(AlertNotifier.TOKEN_EXTRA)
         enableEdgeToEdge()
         setContent {
             val model: SentinelViewModel = viewModel()
             val settings by model.settings.collectAsStateWithLifecycle(initialValue = null)
             val saveError by model.saveError.collectAsStateWithLifecycle()
             val scan by model.scan.collectAsStateWithLifecycle()
+            val monitor by MonitorRuntime.state.collectAsStateWithLifecycle()
             SideEffect {
                 val dark = settings?.darkTheme ?: true
                 enableEdgeToEdge(
@@ -42,7 +53,8 @@ class MainActivity : ComponentActivity() {
                 } else {
                     SentinelApp(loaded, saveError, onDismissError = model::dismissError,
                         scan = scan, onInput = model::updateInput, onAnalyse = model::analyse,
-                        onClear = model::clearScan, onSetting = model::set)
+                        onClear = model::clearScan, onSetting = model::set, monitor = monitor,
+                        alertToken = alertToken, onAlertHandled = { alertToken = null; intent.removeExtra(AlertNotifier.TOKEN_EXTRA) })
                 }
             }
         }
