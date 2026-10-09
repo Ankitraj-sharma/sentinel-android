@@ -2,7 +2,9 @@ package com.phishshield.sentinel
 
 import android.content.Intent
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import androidx.test.ext.junit.rules.ActivityScenarioRule
+import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
@@ -10,9 +12,17 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class SharedInputUiTest {
-    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+    @get:Rule val compose = AndroidComposeTestRule(
+        ActivityScenarioRule<MainActivity>(Intent(Intent.ACTION_SEND).setType("text/plain")
+            .setClass(InstrumentationRegistry.getInstrumentation().targetContext, MainActivity::class.java)
+            .putExtra(Intent.EXTRA_TEXT, "Synthetic initial shared text")),
+        { rule ->
+            lateinit var activity: MainActivity
+            rule.scenario.onActivity { activity = it }
+            activity
+        })
     private fun ready() {
-        compose.waitUntil(10_000) { compose.onAllNodesWithText("Explore Sentinel").fetchSemanticsNodes().isNotEmpty() || compose.onAllNodesWithText("Protection not active").fetchSemanticsNodes().isNotEmpty() || compose.onAllNodesWithText("Local monitoring active").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(10_000) { compose.onAllNodesWithText("Explore Sentinel").fetchSemanticsNodes().isNotEmpty() || compose.onAllNodesWithText("Analyse a message").fetchSemanticsNodes().isNotEmpty() }
         if (compose.onAllNodesWithText("Explore Sentinel").fetchSemanticsNodes().isNotEmpty()) compose.onNodeWithText("Explore Sentinel").performScrollTo().performClick()
     }
     private fun share(text: String) {
