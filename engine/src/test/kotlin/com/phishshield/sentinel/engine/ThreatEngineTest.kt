@@ -22,6 +22,8 @@ class ThreatEngineTest {
 
     @Test fun laterMaliciousInstructionIsNotHiddenByEarlierAdvice() {
         assertEquals(RiskLevel.HIGH, engine.analyse("Do not share your OTP. Send your OTP to me immediately.").level)
+        assertEquals(RiskLevel.HIGH, engine.analyse("Never share OTP but send your password immediately.").level)
+        assertEquals(RiskLevel.NO_OBVIOUS_THREAT, engine.analyse("Never\nshare your OTP.").level)
     }
 
     @Test fun unrelatedSendingDoesNotOverrideNegativeAdvice() {
@@ -91,7 +93,7 @@ class ThreatEngineTest {
 
     @Test fun unsupportedMalformedAndUnresolvedUrlsAreInconclusive() {
         for (url in listOf("javascript:alert(1)", "https://", "https://example.com:65536", "https://example.com:",
-            "https://exa%6dple.com/", "https://bit.ly/example", "https://example.com\\evil")) {
+            "https://exa%6dple.com/", "https://bit.ly/example", "https://example.com\\evil", "https://999.999.999.999")) {
             assertEquals(url, RiskLevel.UNKNOWN, engine.analyse(url).level)
         }
     }

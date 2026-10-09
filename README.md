@@ -13,13 +13,13 @@ Notification access does not provide complete access to private chats or inboxes
 
 ## Status
 
-Stage 1 Android foundation implemented: English onboarding, Protection / Scan / History / Settings navigation, dark and light themes, and locally persisted preferences.
+Stage 2 local analysis implemented on the Android foundation: English onboarding, four-tab navigation, dark/light themes, locally persisted preferences, and manual message/URL analysis with a pure Kotlin rules engine.
 
-**Detection is not implemented in this build.** There are no fabricated scan results or claims that protection is active. Notification selections and history preferences are saved for later stages; they do not enable monitoring.
+**Automatic protection is not active.** Manual Scan produces actual rule-based results and explanations. It does not prove safety or use a trained ML model. Notification selections and history preferences remain future settings; they do not enable monitoring or save scans. QR and Android sharing follow later.
 
 ## Planned stack
 
-Kotlin, Jetpack Compose Material 3, Navigation Compose, and Preferences DataStore. The local threat-analysis engine follows in Stage 2.
+Kotlin, Jetpack Compose Material 3, Navigation Compose, Preferences DataStore, and the platform-independent `engine` module. See [engine design and limitations](docs/stage-2-engine.md).
 
 ## Development
 
@@ -34,7 +34,7 @@ Open this folder in Android Studio and let Gradle sync. Android Studio creates t
 ### Windows
 
 ```powershell
-.\gradlew.bat :app:assembleDebug :app:lintDebug
+.\gradlew.bat :engine:test :app:assembleDebug :app:lintDebug
 .\gradlew.bat :app:installDebug
 .\gradlew.bat :app:connectedDebugAndroidTest
 ```
@@ -42,7 +42,7 @@ Open this folder in Android Studio and let Gradle sync. Android Studio creates t
 ### macOS / Linux
 
 ```sh
-sh ./gradlew :app:assembleDebug :app:lintDebug
+sh ./gradlew :engine:test :app:assembleDebug :app:lintDebug
 sh ./gradlew :app:installDebug
 sh ./gradlew :app:connectedDebugAndroidTest
 ```
@@ -55,11 +55,13 @@ The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`. Devic
 - All four tabs open and Android Back works.
 - Dark/light appearance updates immediately and persists after relaunch.
 - Source selections and the history preference persist after relaunch.
-- Protection remains explicitly inactive; Scan and History show honest empty states.
+- Automatic protection remains explicitly inactive; History has an honest empty state.
+- Manual Scan handles suspicious and legitimate messages, explains evidence, and treats unresolved destinations as inconclusive.
+- Editing or clearing a message removes its previous verdict; messages/results are not written to history.
 - Content scrolls on small screens and with enlarged text.
 - No message, camera, notification or internet permissions are requested.
 
-Instrumentation tests cover navigation truthfulness and persisted preferences. Visual and real-device verification are separate from compilation; see `docs/stage-1-review.md` for recorded evidence.
+Engine tests cover benign and adversarial inputs. Instrumentation covers navigation, preference persistence and the real ViewModel-backed scan/edit/clear flow. Visual and real-device verification are separate from compilation; see [Stage 1 review](docs/stage-1-review.md) and [Stage 2 review](docs/stage-2-review.md).
 
 ## Delivery stages
 

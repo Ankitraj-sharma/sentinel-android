@@ -20,7 +20,7 @@ class ThreatEngine(private val brands: List<Brand> = BrandExamples.entries) {
         private val payment = Regex("(?i)\\b(?:pay|transfer|send money|deposit|processing fee|refund fee)\\b")
         private val prize = Regex("(?i)\\b(?:won|winner|lottery|prize)\\b")
         private val advanceFee = Regex("(?i)\\b(?:processing fee|refund fee|release fee|activation fee)\\b")
-        private val negation = Regex("(?i)\\b(?:do not|don't|never|not)\\s+(?:[a-z]+\\s+){0,4}$")
+        private val negation = Regex("(?i)\\b(?:do not|don't|never|not)\\s+(?:(?:ask(?:\\s+(?:you|anyone|customers))?\\s+to|ever|please)\\s+)?$")
         private val shorteners = setOf("bit.ly", "tinyurl.com", "t.co", "is.gd", "ow.ly")
         private val offlineLimit = "Offline rules cannot verify website reputation, redirects, page content or sender identity. A low score does not prove safety."
     }
@@ -106,6 +106,7 @@ class ThreatEngine(private val brands: List<Brand> = BrandExamples.entries) {
         val host = try { if (hostText.startsWith('[')) hostText.lowercase(Locale.ROOT) else IDN.toASCII(hostText.removeSuffix("."), IDN.USE_STD3_ASCII_RULES).lowercase(Locale.ROOT) }
             catch (_: IllegalArgumentException) { return invalidUrl(raw, "Invalid destination hostname.") }
         if (host.isBlank() || host.length > 253 || host.contains("..")) return invalidUrl(raw, "Invalid destination hostname.")
+        if (Regex("\\d+(?:\\.\\d+){3}").matches(host) && !isIpv4(host)) return invalidUrl(raw, "Invalid IPv4 address.")
         val signals = mutableListOf<Signal>()
         if (authority.contains('@')) signals += Signal("url-userinfo", "Destination obscured by user information", "Text before @ is user information; the actual destination is $host.", authority, 50)
         if (uri.scheme.equals("http", true)) signals += Signal("unencrypted-url", "Unencrypted connection", "HTTP does not encrypt the connection. This alone does not establish phishing.", raw, 10)
@@ -136,7 +137,7 @@ class ThreatEngine(private val brands: List<Brand> = BrandExamples.entries) {
     }
     private fun isNegated(text: String, start: Int): Boolean {
         val prefix = text.substring((start - 60).coerceAtLeast(0), start)
-            .substringAfterLast('.').substringAfterLast('!').substringAfterLast('?').substringAfterLast('\n')
+            .substringAfterLast('.').substringAfterLast('!').substringAfterLast('?').substringAfterLast(';').substringAfterLast(',')
         return negation.containsMatchIn(prefix)
     }
     private fun isIpv4(host: String): Boolean = host.split('.').let { parts -> parts.size == 4 && parts.all { it.toIntOrNull() in 0..255 } }
