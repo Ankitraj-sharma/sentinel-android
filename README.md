@@ -13,9 +13,9 @@ Notification access does not provide complete access to private chats or inboxes
 
 ## Status
 
-Stage 3 adds a dedicated English result view to the local rules engine: risk and coverage summary, evidence cards, parsed destination hosts, independent verification guidance, exact-match highlights and clear/edit/Back navigation.
+Stage 4 adds opt-in local notification preview monitoring, selected sources, connection/access/alert status, generic system warnings and an in-memory notification evidence view. Implementation is under verification; see [Stage 4 review](docs/stage-4-review.md).
 
-**Automatic protection is not active.** Manual Scan produces actual rule-based results and explanations. It does not prove safety or use a trained ML model. Notification selections and history preferences remain future settings; they do not enable monitoring or save scans. QR and Android sharing follow later.
+Automatic analysis requires explicit Enable local monitoring, Android notification access and a selected source. WhatsApp/Business, Gmail and the current default SMS app are supported by exact package selection. Only newly delivered readable previews are analysed; full chats/inboxes, hidden content, live website reputation and guaranteed alert delivery are unavailable. Android 15 may redact OTP notifications. Manual Scan remains available. Rules do not prove safety or use a trained ML model. QR, sharing and persistent history follow later.
 
 ## Planned stack
 
@@ -55,11 +55,11 @@ The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`. Devic
 - All four tabs open and Android Back works.
 - Dark/light appearance updates immediately and persists after relaunch.
 - Source selections and the history preference persist after relaunch.
-- Automatic protection remains explicitly inactive; History has an honest empty state.
+- Automatic monitoring remains paused until opt-in; listener access/connection and system alert delivery are separate visible states.
 - Manual Scan handles suspicious and legitimate messages, explains evidence, and treats unresolved destinations as inconclusive.
 - Editing or clearing a message removes its previous verdict; messages/results are not written to history.
 - Content scrolls on small screens and with enlarged text.
-- No message, camera, notification or internet permissions are requested.
+- Optional notification-listener access and alert permission are explained and requested separately. No SMS inbox, camera, accessibility-service or internet permission is requested.
 
 Engine tests cover benign and adversarial inputs, explanation uncertainty and safe rendering of control characters. Instrumentation covers navigation, preference persistence, the real ViewModel-backed scan/edit/Back/clear flow, partial-coverage evidence and rejected input. See [Stage 1 review](docs/stage-1-review.md), [Stage 2 review](docs/stage-2-review.md) and [Stage 3 review](docs/stage-3-review.md) for observed results; test coverage is not measured detection accuracy.
 
@@ -78,7 +78,7 @@ Stages 1–6 form the team's pre-event readiness milestone, estimated at 75%; th
 
 ## Privacy in this build
 
-Only preferences are stored in app-private DataStore. Current scans stay in ViewModel memory; Clear removes the current input/result. Process death loses scans, while configuration changes retain them. History is off by default. Android backup is disabled. This build has no internet permission, analytics SDK, message reader or notification listener. Future integrations must disclose actual access and any data sent externally.
+Only preferences are stored in app-private DataStore. Current manual scans and the latest notification warning stay in memory. Process death loses results, while configuration changes retain them. Pause/source policy changes or listener disconnection clear the latest notification warning and its alert. Android delivers notification events broadly; unselected package previews are discarded before text extraction. Pause does not revoke Android access; use Manage notification access to revoke it. No network operation, analytics or persistent message history is used. Android backup is disabled.
 
 ## Attribution
 

@@ -11,12 +11,15 @@ fun extractNotificationText(notification: Notification): NotificationText {
     var size = 0
     var hasBody = false
     fun add(value: CharSequence?, body: Boolean = true) {
-        if (value == null || value.isBlank()) return
-        if (value.length > ThreatEngine.MAX_INPUT || size + value.length + 1 > ThreatEngine.MAX_INPUT)
+        if (value == null) return
+        if (value.length > ThreatEngine.MAX_INPUT)
             throw IllegalArgumentException("Oversized preview")
+        if (value.isBlank()) return
         val text = value.toString()
         if (body) hasBody = true
-        if (pieces.add(text)) size += text.length + 1
+        if (text in pieces) return
+        if (size + text.length + 1 > ThreatEngine.MAX_INPUT) throw IllegalArgumentException("Oversized combined preview")
+        pieces.add(text); size += text.length + 1
     }
     return try {
         val extras = notification.extras
