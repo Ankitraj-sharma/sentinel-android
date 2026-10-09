@@ -1,0 +1,41 @@
+id	label	text
+s01	SCAM	Send your OTP to our agent immediately https://paypal.com.evil.test
+s02	SCAM	PayPal account suspended. Act now https://paypal.com.evil.test
+s03	SCAM	Share your password to restore access https://google.com.evil.test
+s04	SCAM	Send PIN immediately to unblock your card
+s05	SCAM	You won a lottery. Pay a processing fee to claim your prize
+s06	SCAM	Winner! Transfer money for the activation fee
+s07	SCAM	https://paypal.com@evil.test/login
+s08	SCAM	https://accounts.google.com@evil.test/verify
+s09	SCAM	Provide your CVV to our representative urgently
+s10	SCAM	SBI account blocked. Act now https://sbi.co.in.evil.test
+s11	SCAM	Microsoft account suspended https://microsoft.com.evil.test
+s12	SCAM	Give your login code immediately to our agent
+s13	SCAM	Your parcel is delayed. Visit https://delivery-support.test to confirm
+s14	SCAM	Invest with us and double your money tomorrow
+s15	SCAM	We are your boss. Buy gift cards and send the numbers
+s16	SCAM	Your tax refund is ready https://refund-centre.test
+b01	BENIGN	Your appointment is tomorrow at 10
+b02	BENIGN	Never share your OTP with anyone
+b03	BENIGN	Do not send your password to strangers
+b04	BENIGN	Visit https://paypal.com to review your account
+b05	BENIGN	Sign in at https://accounts.google.com
+b06	BENIGN	Documentation is at https://learn.microsoft.com
+b07	BENIGN	Your parcel has arrived. Collect it at reception
+b08	BENIGN	Please pay the agreed invoice tomorrow
+b09	BENIGN	Urgent: the meeting room has changed
+b10	BENIGN	Your verification code is 123456. Do not share it
+b11	BENIGN	The local development server is http://192.168.1.1
+b12	BENIGN	At security training discuss the phrase Send your OTP immediately
+b13	BENIGN	This is a classroom example of https://paypal.com.evil.test
+b14	BENIGN	Your account is suspended because you requested closure
+b15	BENIGN	We never ask you to share your password
+b16	BENIGN	Lunch is at noon. See you there
+u01	OUT_OF_SCOPE	upi://pay?pa=synthetic
+u02	OUT_OF_SCOPE	mailto:demo@example.org
+u03	OUT_OF_SCOPE	tel:123456
+u04	OUT_OF_SCOPE	WIFI:T:WPA;S:synthetic;;
+u05	OUT_OF_SCOPE	javascript:alert(1)
+u06	OUT_OF_SCOPE	आपका खाता सुरक्षित है और कृपया किसी अनजान व्यक्ति को अपनी निजी जानकारी कभी न दें
+u07	OUT_OF_SCOPE	https://bit.ly/synthetic
+u08	OUT_OF_SCOPE	https://[invalid
