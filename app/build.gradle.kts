@@ -9,7 +9,7 @@ android {
     defaultConfig {
         val isolated = providers.gradleProperty("isolatedValidation").orNull == "true"
         applicationId = if (isolated) "com.phishshield.sentinel.validation" else "com.phishshield.sentinel"
-        resValue("string", "build_app_name", if (isolated) "Sentinel Preview" else "Sentinel")
+        resValue("string", "build_app_name", "Sentinel")
         buildConfigField("String", "DEMO_PACKAGE", "\"com.phishshield.sentinel.fixture${if (isolated) ".validation" else ""}\"")
         minSdk = 26
         targetSdk = 35
