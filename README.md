@@ -13,6 +13,8 @@ Notification access does not provide complete access to private chats or inboxes
 
 ## Status
 
+Sentinel 0.7.2 applies the owner's neon-green shield logo to launcher and in-app branding, with matching green/navy themes. The original PNG is bundled unchanged; the notification icon uses an adapted monochrome silhouette.
+
 Sentinel 0.7.1 adds visible foreground background protection, safe replacement of detected source notifications and clearer warning copy. The user confirmed live SMS detection after removing the app from Recents. See [background verification and limits](docs/background-protection.md).
 
 The local 0.7.0 hardening update adds broader English scam combinations, historical exact-URL evidence from the supplied Kaggle dataset, reduced warnings for ordinary HTTP/IP destinations, and notification extraction/reconnection fixes. See [hardening scope and limitations](docs/detection-hardening.md). Historical dataset matches are not live reputation, and missing matches never prove safety. Phone regressions can use `-PisolatedValidation=true` to install Sentinel Preview separately and preserve an existing installation's encrypted history.
@@ -86,7 +88,7 @@ Preferences are stored in app-private DataStore. History starts off and requires
 
 ## Attribution
 
-AndroidX libraries are provided by the Android Open Source Project under their respective licenses. The Gradle wrapper is the standard Gradle tooling. Dependency coordinates and pinned versions are in `app/build.gradle.kts` and the root build file. The shield launcher asset is project-authored.
+AndroidX libraries are provided by the Android Open Source Project under their respective licenses. The Gradle wrapper is the standard Gradle tooling. Dependency coordinates and pinned versions are in `app/build.gradle.kts` and the root build file. The current shield launcher artwork was supplied by the project owner.
 
 QR decoding uses [ZXing Core](https://github.com/zxing/zxing) and [ZXing Android Embedded](https://github.com/journeyapps/zxing-android-embedded), licensed under Apache 2.0. The test QR image was generated from fixed synthetic text with ZXing and contains no real user data.
 
