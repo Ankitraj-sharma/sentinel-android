@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 data class NotificationDetection(val token: String, val source: String, val text: String,
     val result: AnalysisResult, val receivedAt: Long)
 data class MonitorState(val connected: Boolean = false, val accessGranted: Boolean = false,
+    val policyEnabled: Boolean = false,
     val alertsEnabled: Boolean = false, val scanned: Int = 0, val skipped: Int = 0,
     val lastEvent: String = "No selected notification received in this session.",
     val latest: NotificationDetection? = null)

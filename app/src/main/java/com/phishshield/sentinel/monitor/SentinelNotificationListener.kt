@@ -29,18 +29,7 @@ class SentinelNotificationListener : NotificationListenerService() {
         scope.launch {
             SettingsRepository(applicationContext).settings.collect { next ->
                 settings = next
-                val packages = buildSet {
-                    if (next.whatsapp) { add("com.whatsapp"); add("com.whatsapp.w4b") }
-                    if (next.gmail) add("com.google.android.gm")
-                    if (next.sms) Telephony.Sms.getDefaultSmsPackage(applicationContext)?.let(::add)
-                    if (BuildConfig.DEBUG && next.demoSource) add("com.phishshield.sentinel.fixture")
-                }
-                val updated = NotificationPolicy(next.monitoring && next.onboardingComplete, packages)
-                if (updated != policy) {
-                    policy = updated; generation++; deduplicator.clear()
-                    MonitorRuntime.clear(this@SentinelNotificationListener)
-                    while (queue.tryReceive().isSuccess) { /* Drop queued previews on policy change. */ }
-                }
+                refreshPolicy(next)
             }
         }
         scope.launch {
@@ -83,20 +72,40 @@ class SentinelNotificationListener : NotificationListenerService() {
     private fun allowed(preview: Preview) = generation == preview.generation && MonitorRuntime.state.value.connected &&
         policy.accepts(preview.owner, packageName, false, false)
 
+    private fun drain() { while (queue.tryReceive().isSuccess) { } }
+    private fun refreshPolicy(next: UserSettings) {
+        val packages = buildSet {
+            if (next.whatsapp) { add("com.whatsapp"); add("com.whatsapp.w4b") }
+            if (next.gmail) add("com.google.android.gm")
+            if (next.sms) Telephony.Sms.getDefaultSmsPackage(applicationContext)?.let(::add)
+            if (BuildConfig.DEBUG && next.demoSource) add("com.phishshield.sentinel.fixture")
+        }
+        val updated = NotificationPolicy(next.monitoring && next.onboardingComplete, packages)
+        if (updated != policy) {
+            policy = updated; generation++; deduplicator.clear(); drain()
+            MonitorRuntime.clear(this)
+        }
+        MonitorRuntime.update { it.copy(policyEnabled = updated.enabled) }
+    }
+
     override fun onListenerConnected() {
         super.onListenerConnected()
+        generation++; deduplicator.clear(); drain()
         MonitorRuntime.update { it.copy(connected = true) }
         MonitorRuntime.refresh(this)
         // Do not replay pre-consent or previously active notifications.
     }
     override fun onListenerDisconnected() {
         generation++
+        deduplicator.clear(); drain()
         MonitorRuntime.update { it.copy(connected = false) }
         MonitorRuntime.clear(this)
         super.onListenerDisconnected()
     }
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         if (settings == null || !MonitorRuntime.state.value.connected) return
+        // Re-resolve default SMS owner before accepting any event; never inspect a previous default's fields.
+        refreshPolicy(settings!!)
         val flags = sbn.notification.flags
         if (!policy.accepts(sbn.packageName, packageName, flags and Notification.FLAG_GROUP_SUMMARY != 0,
                 flags and Notification.FLAG_ONGOING_EVENT != 0)) return
@@ -107,7 +116,7 @@ class SentinelNotificationListener : NotificationListenerService() {
     }
     override fun onDestroy() {
         scope.cancel(); queue.close()
-        MonitorRuntime.update { it.copy(connected = false) }
+        MonitorRuntime.update { it.copy(connected = false, policyEnabled = false) }
         MonitorRuntime.clear(this)
         super.onDestroy()
     }

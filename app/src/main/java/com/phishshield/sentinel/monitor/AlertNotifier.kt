@@ -23,7 +23,9 @@ object AlertNotifier {
     fun post(context: Context, detection: NotificationDetection): Boolean {
         createChannel(context)
         MonitorRuntime.refresh(context)
-        if (!MonitorRuntime.state.value.alertsEnabled) return false
+        val current = MonitorRuntime.state.value
+        if (!current.alertsEnabled || !current.accessGranted || !current.connected ||
+            !current.policyEnabled || current.latest?.token != detection.token) return false
         val intent = Intent(context, MainActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             .putExtra(TOKEN_EXTRA, detection.token)
@@ -36,7 +38,7 @@ object AlertNotifier {
             .setVisibility(Notification.VISIBILITY_PRIVATE)
             .setPublicVersion(Notification.Builder(context, CHANNEL_ID).setSmallIcon(R.drawable.ic_sentinel)
                 .setContentTitle("Sentinel warning").setContentText("Unlock to review.").build())
-            .setContentIntent(pending).setAutoCancel(true).setOnlyAlertOnce(true).build()
+            .setContentIntent(pending).setAutoCancel(true).build()
         return try {
             context.getSystemService(NotificationManager::class.java).notify(ALERT_ID, notification)
             true

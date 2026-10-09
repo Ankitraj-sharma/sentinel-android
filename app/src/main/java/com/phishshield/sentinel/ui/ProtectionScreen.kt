@@ -41,6 +41,7 @@ fun ProtectionScreen(settings: UserSettings, state: MonitorState,
         !settings.monitoring -> "Protection not active"
         !state.accessGranted -> "Notification access needed"
         !state.connected -> "Listener disconnected"
+        !state.policyEnabled -> "Applying monitoring preferences"
         !selected -> "Choose a source"
         else -> "Monitoring selected notifications"
     }

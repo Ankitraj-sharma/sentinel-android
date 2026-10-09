@@ -145,7 +145,7 @@ private fun History(enabled: Boolean) {
         Text("No detections yet", style = MaterialTheme.typography.titleLarge)
         Text("Manual scans are not saved in this build. No messages or scan results have been stored in history.")
         Info(if (enabled) "History preference enabled" else "History preference disabled",
-            "Your preference is saved. Detection history and deletion controls will be available when scanning is enabled.")
+            "Your preference is saved. Persistent detection history and deletion controls follow in a later stage.")
     }
 }
 
