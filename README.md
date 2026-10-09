@@ -13,7 +13,7 @@ Notification access does not provide complete access to private chats or inboxes
 
 ## Status
 
-Stage 6 implementation is under verification: encrypted opt-in metadata history, deletion/privacy controls and transparent synthetic evaluation. Stage 5 QR/share and Stage 4 notification paths remain available. See [Stage 6 privacy design](docs/stage-6-history.md); final independent acceptance follows observed tests.
+Stages 1–6 are complete. Stage 6 adds encrypted opt-in metadata history, deletion/privacy controls and transparent synthetic evaluation, independently accepted at 9/10. Verification: 35 engine tests and 22 Android tests passed on a Vivo Android 13 phone; lint retains 13 warnings. See [Stage 6 review](docs/stage-6-review.md), [privacy design](docs/stage-6-history.md) and [synthetic evaluation](docs/stage-6-evaluation.md). This reaches the team's estimated 75% pre-event readiness milestone.
 
 Automatic analysis requires explicit Enable local monitoring, Android notification access and a selected source. WhatsApp/Business, Gmail and the current default SMS app are supported by exact package selection. Only newly delivered readable previews are analysed; full chats/inboxes, hidden content, live website reputation and guaranteed alert delivery are unavailable. Android 15 may redact OTP notifications. Manual Scan, QR camera/image and shared-text input are available. QR supports HTTP(S) destinations only; links are never opened automatically. Rules do not prove safety or use a trained ML model. Opt-in metadata history is available; full scan text and destinations are never stored in history.
 
