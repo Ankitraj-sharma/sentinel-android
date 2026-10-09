@@ -61,14 +61,14 @@ class SentinelNotificationListener : NotificationListenerService() {
                 val historySource = when (preview.owner) {
                     "com.whatsapp", "com.whatsapp.w4b" -> HistorySource.WHATSAPP
                     "com.google.android.gm" -> HistorySource.GMAIL
-                    BuildConfig.DEMO_PACKAGE -> HistorySource.SYNTHETIC_DEMO
+                    demoPackage(this@SentinelNotificationListener) -> HistorySource.SYNTHETIC_DEMO
                     else -> HistorySource.SMS
                 }
                 if (limited.level == RiskLevel.HIGH || limited.level == RiskLevel.REVIEW) {
                     val source = when (preview.owner) {
                         "com.whatsapp", "com.whatsapp.w4b" -> "WhatsApp"
                         "com.google.android.gm" -> "Gmail"
-                        BuildConfig.DEMO_PACKAGE -> "Synthetic demo"
+                        demoPackage(this@SentinelNotificationListener) -> "Synthetic demo"
                         else -> "Default SMS app"
                     }
                     val detection = NotificationDetection(UUID.randomUUID().toString(), source, preview.text.text, limited, preview.receivedAt)
@@ -94,7 +94,7 @@ class SentinelNotificationListener : NotificationListenerService() {
             if (next.whatsapp) { add("com.whatsapp"); add("com.whatsapp.w4b") }
             if (next.gmail) add("com.google.android.gm")
             if (next.sms) Telephony.Sms.getDefaultSmsPackage(applicationContext)?.let(::add)
-            if (BuildConfig.DEBUG && next.demoSource) add(BuildConfig.DEMO_PACKAGE)
+            if (BuildConfig.DEBUG && next.demoSource) add(demoPackage(this@SentinelNotificationListener))
         }
         val updated = NotificationPolicy(next.monitoring && next.onboardingComplete, packages)
         if (updated != policy) {

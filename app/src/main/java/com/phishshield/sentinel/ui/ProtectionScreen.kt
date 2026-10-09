@@ -31,7 +31,7 @@ fun ProtectionScreen(settings: UserSettings, state: MonitorState,
     val context = LocalContext.current
     var setupError by remember { mutableStateOf<String?>(null) }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
-        MonitorRuntime.refresh(context)
+        MonitorRuntime.ensureConnected(context)
     }
     fun open(intent: Intent) {
         try { context.startActivity(intent) } catch (_: Exception) { setupError = "This device could not open that settings page. Use Android Settings to manage Sentinel permissions." }

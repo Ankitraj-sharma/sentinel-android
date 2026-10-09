@@ -10,6 +10,15 @@ import com.phishshield.sentinel.MainActivity
 import com.phishshield.sentinel.R
 
 object AlertNotifier {
+    private var pendingToken: String? = null
+    fun retryPending(context: Context) {
+        val current = MonitorRuntime.state.value
+        val detection = current.latest ?: return
+        if (pendingToken == detection.token && current.alertsEnabled && current.accessGranted &&
+            current.connected && current.policyEnabled && post(context, detection)) {
+            MonitorRuntime.update { it.copy(lastEvent = "Pending warning posted after delivery became available.") }
+        }
+    }
     const val CHANNEL_ID = "sentinel_risk_alerts"
     const val ALERT_ID = 4100
     const val TOKEN_EXTRA = "notification_detection_token"
@@ -25,7 +34,10 @@ object AlertNotifier {
         MonitorRuntime.refresh(context)
         val current = MonitorRuntime.state.value
         if (!current.alertsEnabled || !current.accessGranted || !current.connected ||
-            !current.policyEnabled || current.latest?.token != detection.token) return false
+            !current.policyEnabled || current.latest?.token != detection.token) {
+            if (current.latest?.token == detection.token) pendingToken = detection.token
+            return false
+        }
         val intent = Intent(context, MainActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             .putExtra(TOKEN_EXTRA, detection.token)
@@ -41,7 +53,8 @@ object AlertNotifier {
             .setContentIntent(pending).setAutoCancel(true).build()
         return try {
             context.getSystemService(NotificationManager::class.java).notify(ALERT_ID, notification)
+            pendingToken = null
             true
-        } catch (_: SecurityException) { false }
+        } catch (_: SecurityException) { pendingToken = detection.token; false }
     }
 }

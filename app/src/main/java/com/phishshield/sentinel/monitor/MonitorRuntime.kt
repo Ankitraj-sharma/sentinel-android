@@ -11,6 +11,10 @@ import com.phishshield.sentinel.engine.AnalysisResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+/** Resolve from the installed package rather than an inlined build-variant constant. */
+fun demoPackage(context: Context): String = "com.phishshield.sentinel.fixture" +
+    context.packageName.removePrefix("com.phishshield.sentinel")
+
 data class NotificationDetection(val token: String, val source: String, val text: String,
     val result: AnalysisResult, val receivedAt: Long)
 data class MonitorState(val connected: Boolean = false, val accessGranted: Boolean = false,
@@ -45,6 +49,7 @@ object MonitorRuntime {
     /** Recover an already-authorised listener; never grants notification access. */
     fun ensureConnected(context: Context) {
         refresh(context)
+        AlertNotifier.retryPending(context)
         val now = SystemClock.elapsedRealtime()
         if (!state.value.accessGranted || state.value.connected || now - lastRebindAt < 30_000L) return
         lastRebindAt = now

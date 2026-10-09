@@ -8,9 +8,11 @@ android {
     compileSdk = 35
     defaultConfig {
         val isolated = providers.gradleProperty("isolatedValidation").orNull == "true"
-        applicationId = if (isolated) "com.phishshield.sentinel.validation" else "com.phishshield.sentinel"
+        val suffix = providers.gradleProperty("validationSuffix").orNull ?: "validation"
+        require(suffix.matches(Regex("[a-z][a-z0-9]*")))
+        applicationId = if (isolated) "com.phishshield.sentinel.$suffix" else "com.phishshield.sentinel"
         resValue("string", "build_app_name", "Sentinel")
-        buildConfigField("String", "DEMO_PACKAGE", "\"com.phishshield.sentinel.fixture${if (isolated) ".validation" else ""}\"")
+        buildConfigField("String", "DEMO_PACKAGE", "\"com.phishshield.sentinel.fixture${if (isolated) ".$suffix" else ""}\"")
         minSdk = 26
         targetSdk = 35
         versionCode = 7
