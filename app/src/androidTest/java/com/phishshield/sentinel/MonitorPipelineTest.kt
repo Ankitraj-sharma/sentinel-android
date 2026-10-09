@@ -28,11 +28,12 @@ class MonitorPipelineTest {
     private fun waitFor(message: String, condition: () -> Boolean) {
         val until = SystemClock.elapsedRealtime() + 15_000
         while (!condition() && SystemClock.elapsedRealtime() < until) Thread.sleep(100)
-        assertTrue(message, condition())
+        val state = MonitorRuntime.state.value
+        assertTrue("$message (connected=${state.connected}, policy=${state.policyEnabled}, scanned=${state.scanned}, skipped=${state.skipped}, event=${state.lastEvent})", condition())
     }
     private fun post(kind: String) {
         Thread.sleep(350) // Keep synthetic traffic below Android's notification update rate limits.
-        shell("am start -W --activity-single-top -n ${BuildConfig.DEMO_PACKAGE}/com.phishshield.sentinel.fixture.FixtureActivity --es kind $kind")
+        shell("am start -W --activity-single-top -n ${demoPackage(context)}/com.phishshield.sentinel.fixture.FixtureActivity --es kind $kind")
     }
     private fun main(action: () -> Unit) = instrumentation.runOnMainSync(action)
 
@@ -71,6 +72,22 @@ class MonitorPipelineTest {
             post("scam"); Thread.sleep(600)
             assertEquals("identical update not rescanned", scanned, MonitorRuntime.state.value.scanned)
             assertEquals("identical update not saved twice", firstHistoryCount, history.state.value.entries.size)
+            // Simulate a transient runtime delivery gate; the recovery posts a real OS alert.
+            // AppOps denial does not change areNotificationsEnabled in this instrumented Vivo process.
+            main {
+                manager.cancel(AlertNotifier.ALERT_ID)
+                MonitorRuntime.update { it.copy(connected = false) }
+                assertFalse(AlertNotifier.post(context, first))
+                MonitorRuntime.update { it.copy(connected = true) }
+                MonitorRuntime.ensureConnected(context)
+            }
+            waitFor("pending warning posts after delivery gate recovers") {
+                manager.activeNotifications.any { it.id == AlertNotifier.ALERT_ID } &&
+                    MonitorRuntime.state.value.lastEvent == "Pending warning posted after delivery became available."
+            }
+            assertEquals(first.token, MonitorRuntime.state.value.latest?.token)
+            main { manager.cancel(AlertNotifier.ALERT_ID); MonitorRuntime.ensureConnected(context) }
+            assertFalse("successful recovery is not replayed", manager.activeNotifications.any { it.id == AlertNotifier.ALERT_ID })
             post("updated")
             waitFor("changed update reanalysed") { MonitorRuntime.state.value.latest?.token != first.token }
             assertNotNull(MonitorRuntime.state.value.latest)
@@ -135,7 +152,7 @@ class MonitorPipelineTest {
             repository.set(Setting.MONITORING, before.monitoring)
             if (accessBefore) shell("cmd notification allow_listener $component")
             main { MonitorRuntime.clear(context); MonitorRuntime.refresh(context) }
-            shell("am force-stop ${BuildConfig.DEMO_PACKAGE}")
+            shell("am force-stop ${demoPackage(context)}")
         }
     }
 }

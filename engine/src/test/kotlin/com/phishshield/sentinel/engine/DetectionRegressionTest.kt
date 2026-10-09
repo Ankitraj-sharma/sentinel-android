@@ -59,6 +59,7 @@ class DetectionRegressionTest {
         val index = UrlThreatIndex.read(File("../app/src/main/assets/url-threats-v1.bin").inputStream())
         val indexed = ThreatEngine(threatLookup = index)
         assertEquals(RiskLevel.HIGH, indexed.analyse("br-icloud.com.br").level)
+        assertEquals(RiskLevel.HIGH, indexed.analyse("Hey there click on this link and win 110$ today Quick\n\nbr-icloud.com.br").level)
         assertEquals(RiskLevel.HIGH, indexed.analyse("Sender\nVisit br-icloud.com.br to sign in").level)
         assertEquals(RiskLevel.HIGH, indexed.analyse("http://www.pashminaonline.com/pure-pashminas").level)
         assertEquals(RiskLevel.NO_OBVIOUS_THREAT, indexed.analyse("bopsecrets.org/rexroth/cr/1.htm").level)
