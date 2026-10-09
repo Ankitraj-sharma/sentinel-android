@@ -22,17 +22,18 @@ import com.phishshield.sentinel.ui.SentinelApp
 import com.phishshield.sentinel.ui.SentinelTheme
 
 class MainActivity : ComponentActivity() {
+    private fun readAlertToken(intent: Intent): String? = try { intent.getStringExtra(AlertNotifier.TOKEN_EXTRA) } catch (_: RuntimeException) { null }
     private val model: SentinelViewModel by viewModels()
     private var alertToken by mutableStateOf<String?>(null)
     override fun onResume() { super.onResume(); MonitorRuntime.refresh(this) }
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent); setIntent(intent)
-        alertToken = intent.getStringExtra(AlertNotifier.TOKEN_EXTRA)
+        alertToken = readAlertToken(intent)
         readSharedInput(intent)?.let { model.importContent(it, InputSource.SHARED_TEXT) }
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        alertToken = intent.getStringExtra(AlertNotifier.TOKEN_EXTRA)
+        alertToken = readAlertToken(intent)
         if (savedInstanceState == null) readSharedInput(intent)?.let { model.importContent(it, InputSource.SHARED_TEXT) }
         enableEdgeToEdge()
         setContent {
