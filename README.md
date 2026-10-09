@@ -13,7 +13,7 @@ Notification access does not provide complete access to private chats or inboxes
 
 ## Status
 
-Stage 2 local analysis implemented on the Android foundation: English onboarding, four-tab navigation, dark/light themes, locally persisted preferences, and manual message/URL analysis with a pure Kotlin rules engine.
+Stage 3 adds a dedicated English result view to the local rules engine: risk and coverage summary, evidence cards, parsed destination hosts, independent verification guidance, exact-match highlights and clear/edit/Back navigation.
 
 **Automatic protection is not active.** Manual Scan produces actual rule-based results and explanations. It does not prove safety or use a trained ML model. Notification selections and history preferences remain future settings; they do not enable monitoring or save scans. QR and Android sharing follow later.
 
@@ -49,7 +49,7 @@ sh ./gradlew :app:connectedDebugAndroidTest
 
 The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`. Device commands require a connected, authorised device with USB debugging enabled, or a running emulator.
 
-### Stage 1 acceptance checklist
+### Current acceptance checklist
 
 - First launch explains this build's scope before entering the app.
 - All four tabs open and Android Back works.
@@ -61,7 +61,7 @@ The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`. Devic
 - Content scrolls on small screens and with enlarged text.
 - No message, camera, notification or internet permissions are requested.
 
-Engine tests cover benign and adversarial inputs. Instrumentation covers navigation, preference persistence and the real ViewModel-backed scan/edit/clear flow. Visual and real-device verification are separate from compilation; see [Stage 1 review](docs/stage-1-review.md) and [Stage 2 review](docs/stage-2-review.md).
+Engine tests cover benign and adversarial inputs, explanation uncertainty and safe rendering of control characters. Instrumentation covers navigation, preference persistence, the real ViewModel-backed scan/edit/Back/clear flow, partial-coverage evidence and rejected input. See [Stage 1 review](docs/stage-1-review.md), [Stage 2 review](docs/stage-2-review.md) and [Stage 3 review](docs/stage-3-review.md) for observed results; test coverage is not measured detection accuracy.
 
 ## Delivery stages
 
@@ -78,7 +78,7 @@ Stages 1–6 form the team's pre-event readiness milestone, estimated at 75%; th
 
 ## Privacy in this build
 
-Only preferences are stored in app-private DataStore. History is off by default. Android backup is disabled. There is no internet permission, analytics SDK, message reader or notification listener in Stage 1. Future integrations must disclose actual access and any data sent externally.
+Only preferences are stored in app-private DataStore. Current scans stay in ViewModel memory; Clear removes the current input/result. Process death loses scans, while configuration changes retain them. History is off by default. Android backup is disabled. This build has no internet permission, analytics SDK, message reader or notification listener. Future integrations must disclose actual access and any data sent externally.
 
 ## Attribution
 

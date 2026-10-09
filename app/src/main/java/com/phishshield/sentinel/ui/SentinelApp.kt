@@ -164,7 +164,7 @@ private fun Settings(settings: UserSettings, onSetting: (Setting, Boolean) -> Un
             onSetting(Setting.SAVE_HISTORY, it)
         }
         Info("No network access", "This build has no internet permission, cloud analysis or analytics. Only your preferences are saved locally.")
-        Text("Sentinel 0.2.0 · Local analysis preview\nTeam PhishShield", style = MaterialTheme.typography.bodySmall,
+        Text("Sentinel 0.3.0 · Explained local analysis\nTeam PhishShield", style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
