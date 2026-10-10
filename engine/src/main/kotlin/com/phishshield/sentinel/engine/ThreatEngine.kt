@@ -35,7 +35,9 @@ class ThreatEngine(private val brands: List<Brand> = BrandExamples.entries,
         fun add(id: String, title: String, reason: String, match: MatchResult?, weight: Int) {
             if (match != null) signals += Signal(id, title, reason, match.value, weight)
         }
+        val recoveryRequest = Regex("(?i)\\b(?:send|share|provide|give)\\b[^.!?\\n]{0,55}\\b(?:seed phrase|recovery phrase|private key)\\b")
         val credential = request.findAll(text).firstOrNull { !isNegated(text, it.range.first) }
+            ?: recoveryRequest.findAll(text).firstOrNull { !isNegated(text, it.range.first) }
         add("credential-request", "Request to disclose a secret",
             "The message asks you to disclose an authentication secret. Verify the request through the official service.", credential, 55)
         val pressure = urgency.findAll(text).firstOrNull { !isNegated(text, it.range.first) }

@@ -6,6 +6,10 @@ internal object EnglishScamRules {
         val topic: Regex, val action: Regex, val weight: Int)
     private fun pattern(value: String) = Regex(value, RegexOption.IGNORE_CASE)
     private val rules = listOf(
+        Rule("job-deposit", "Payment demanded to release task earnings",
+            "A work or task offer asks you to pay before withdrawing earnings. Verify independently before paying.",
+            pattern("\\b(?:tasks?|earnings|commission|salary|job)\\b"),
+            pattern("\\b(?:pay|deposit|transfer)\\b[^.!?\\n]{0,70}\\b(?:unlock|withdraw|release)\\b[^.!?\\n]{0,40}\\b(?:earnings|salary|commission|balance)\\b"), 40),
         Rule("investment-return", "Unrealistic investment return promise",
             "An investment or money request is paired with a rapid or guaranteed return promise. Verify the offer independently.",
             pattern("\\b(?:invest(?:ment)?|trading|crypto|money|returns?|profit)\\b"),
@@ -41,7 +45,7 @@ internal object EnglishScamRules {
                 !Regex("(?i)(?:https?://|www\\.|\\b[a-z0-9-]+\\.[a-z]{2,}(?:/|\\b))").containsMatchIn(paragraph)) return@firstNotNullOfOrNull null
             val beforeAction = paragraph.substring(0, action.range.first).takeLast(60)
             val beforeTopic = paragraph.substring(0, topic.range.first).takeLast(60)
-            val negative = pattern("\\b(?:never|do not|don't)\\s+$")
+            val negative = pattern("\\b(?:never|do not|don't)\\s+(?:(?:ask(?:\\s+(?:you|anyone|customers))?\\s+to|ever|please)\\s+)?$")
             if (negative.containsMatchIn(beforeAction) || negative.containsMatchIn(beforeTopic)) return@firstNotNullOfOrNull null
             Signal(rule.id, rule.title, rule.explanation, "${topic.value} / ${action.value}", rule.weight)
         }
