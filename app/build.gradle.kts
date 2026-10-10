@@ -1,7 +1,21 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+}
+val releaseSigning = Properties().apply {
+    val config = rootProject.file("keystore.properties")
+    if (config.isFile) config.inputStream().use { load(it) }
+}
+val hasReleaseSigning = listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
+    .all { !releaseSigning.getProperty(it).isNullOrBlank() }
+if (gradle.startParameter.taskNames.any { it.contains("release", ignoreCase = true) }) {
+    require(hasReleaseSigning) { "Release signing requires local keystore.properties; see docs/release-distribution.md" }
+    require(providers.gradleProperty("isolatedValidation").orNull != "true") {
+        "Distribution releases must use the standard application ID"
+    }
 }
 android {
     namespace = "com.phishshield.sentinel"
@@ -15,8 +29,8 @@ android {
         buildConfigField("String", "DEMO_PACKAGE", "\"com.phishshield.sentinel.fixture${if (isolated) ".$suffix" else ""}\"")
         minSdk = 26
         targetSdk = 35
-        versionCode = 9
-        versionName = "0.7.2"
+        versionCode = 10
+        versionName = "0.7.3"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     compileOptions {
@@ -25,6 +39,21 @@ android {
     }
     kotlinOptions { jvmTarget = "17" }
     buildFeatures { compose = true; buildConfig = true }
+    signingConfigs {
+        if (hasReleaseSigning) create("distribution") {
+            storeFile = rootProject.file(releaseSigning.getProperty("storeFile"))
+            storePassword = releaseSigning.getProperty("storePassword")
+            keyAlias = releaseSigning.getProperty("keyAlias")
+            keyPassword = releaseSigning.getProperty("keyPassword")
+        }
+    }
+    buildTypes {
+        getByName("release") {
+            isDebuggable = false
+            isMinifyEnabled = false
+            if (hasReleaseSigning) signingConfig = signingConfigs.getByName("distribution")
+        }
+    }
 }
 dependencies {
     implementation("androidx.core:core:1.13.1")
