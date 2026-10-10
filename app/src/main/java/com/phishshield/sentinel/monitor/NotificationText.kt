@@ -3,8 +3,9 @@ package com.phishshield.sentinel.monitor
 import android.app.Notification
 import androidx.core.app.NotificationCompat
 import com.phishshield.sentinel.engine.ThreatEngine
+import com.phishshield.sentinel.engine.PreviewCompleteness
 
-data class NotificationText(val text: String, val unavailable: String? = null)
+data class NotificationText(val text: String, val unavailable: String? = null, val visiblyCutOff: Boolean = false)
 
 fun extractNotificationText(notification: Notification): NotificationText {
     val pieces = linkedSetOf<String>()
@@ -40,7 +41,7 @@ fun extractNotificationText(notification: Notification): NotificationText {
         }
         val text = pieces.joinToString("\n")
         if (!hasBody || text.isBlank()) NotificationText("", "No readable preview body was provided. Hidden content was not assessed.")
-        else NotificationText(text)
+        else NotificationText(text, visiblyCutOff = PreviewCompleteness.hasCutOffMarker(text))
     } catch (_: Exception) {
         NotificationText("", "Preview could not be read within local input limits. Nothing was analysed.")
     }

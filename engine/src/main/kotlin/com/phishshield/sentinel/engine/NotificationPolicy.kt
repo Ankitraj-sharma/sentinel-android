@@ -21,4 +21,5 @@ class NotificationDeduplicator(private val capacity: Int = 128) {
         return false
     }
     fun clear() = seen.clear()
+    fun forget(key: String) { seen.remove(key) }
 }

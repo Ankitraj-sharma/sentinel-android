@@ -43,6 +43,8 @@ fun ProtectionScreen(settings: UserSettings, state: MonitorState,
         !state.connected -> "Listener disconnected"
         !state.policyEnabled -> "Applying monitoring preferences"
         !selected -> "Choose a source"
+        !state.alertsEnabled -> "Analysis active · alerts disabled"
+        !state.backgroundActive -> "Analysis active · background protection stopped"
         else -> "Monitoring selected notifications"
     }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),

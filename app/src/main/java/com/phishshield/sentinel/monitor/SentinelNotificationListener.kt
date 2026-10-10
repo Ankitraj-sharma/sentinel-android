@@ -68,7 +68,8 @@ class SentinelNotificationListener : NotificationListenerService() {
                 }
                 if (!allowed(preview)) continue
                 val limited = result.copy(status = if (result.status == AnalysisStatus.NOT_ANALYSED) result.status else AnalysisStatus.LIMITED,
-                    limitations = result.limitations + "Notification preview only: hidden, truncated, bundled or redacted content and the sender's identity cannot be verified.")
+                    limitations = result.limitations + "Notification preview only: hidden, truncated, bundled or redacted content and the sender's identity cannot be verified." +
+                        if (preview.text.visiblyCutOff) listOf("Visible preview cut-off: only the displayed fragment was analysed. Share the full message for more context.") else emptyList())
                 MonitorRuntime.update { it.copy(scanned = it.scanned + 1, lastEvent = "Selected preview analysed locally · ${limited.level.label}") }
                 val historySource = when (preview.owner) {
                     "com.whatsapp", "com.whatsapp.w4b" -> HistorySource.WHATSAPP
@@ -170,6 +171,13 @@ class SentinelNotificationListener : NotificationListenerService() {
         if (!queue.trySend(preview).isSuccess) MonitorRuntime.update {
             it.copy(skipped = it.skipped + 1, lastEvent = "Preview skipped: local processing queue is full.")
         }
+    }
+    override fun onNotificationRemoved(sbn: StatusBarNotification) {
+        // Invalidate queued work for a removed event; a later repost deserves fresh analysis.
+        revisions.remove(sbn.key)
+        deduplicator.forget(sbn.key)
+        AlertNotifier.sourceRemoved(sbn.key)
+        super.onNotificationRemoved(sbn)
     }
     override fun onDestroy() {
         if (active?.get() === this) active = null

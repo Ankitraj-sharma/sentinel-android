@@ -11,6 +11,14 @@ import com.phishshield.sentinel.R
 
 object AlertNotifier {
     private var pendingToken: String? = null
+    fun sourceRemoved(key: String) {
+        val detection = MonitorRuntime.state.value.latest ?: return
+        // Only undelivered warnings expire. Our own replacement must retain its posted assessment.
+        if (detection.origin?.key == key && pendingToken == detection.token) {
+            pendingToken = null
+            MonitorRuntime.update { it.copy(latest = null, lastEvent = "Source notification removed before warning delivery.") }
+        }
+    }
     fun retryPending(context: Context) {
         val current = MonitorRuntime.state.value
         val detection = current.latest ?: return
