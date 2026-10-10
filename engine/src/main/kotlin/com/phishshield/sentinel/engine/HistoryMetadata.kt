@@ -17,7 +17,8 @@ enum class HistoryRule(val code: String, val label: String) {
     DELIVERY("delivery-action", "Delivery problem with a linked action"),
     REFUND("refund-action", "Refund claim with a linked action"),
     REMOTE_ACCESS("remote-access", "Request to install remote access software"),
-    JOB_DEPOSIT("job-deposit", "Payment requested to obtain a job")
+    JOB_DEPOSIT("job-deposit", "Payment requested to obtain a job"),
+    TASK_EARNINGS("task-earnings-deposit", "Payment demanded to release task earnings")
 }
 /** No free-form text or destination field: raw content cannot enter persisted metadata. */
 data class HistoryRecord(val id: String, val timeMillis: Long, val source: HistorySource,

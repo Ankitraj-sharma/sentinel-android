@@ -5,8 +5,23 @@ import org.junit.Test
 
 class Stage7RegressionTest {
     @Test fun taskWithdrawalPaymentsDifferFromNormalPayrollUpdates() {
-        assertTrue(ThreatEngine().analyse("Complete tasks then pay a deposit to unlock your earnings.").signals.any { it.id == "job-deposit" })
-        assertFalse(ThreatEngine().analyse("Your salary and commission will arrive on Friday.").signals.any { it.id == "job-deposit" })
+        assertTrue(ThreatEngine().analyse("Complete tasks then pay a deposit to unlock your earnings.").signals.any { it.id == "task-earnings-deposit" })
+        assertFalse(ThreatEngine().analyse("Your salary and commission will arrive on Friday.").signals.any { it.id == "task-earnings-deposit" })
+    }
+    @Test fun taskWithdrawalAndJobDepositRulesDoNotCollide() {
+        val message = "Work from home job: pay the registration fee to start. Complete tasks then pay a deposit to unlock your earnings."
+        val result = ThreatEngine().analyse(message)
+        val ids = result.signals.map { it.id }.toSet()
+        assertTrue(ids.contains("job-deposit"))
+        assertTrue(ids.contains("task-earnings-deposit"))
+        assertEquals(80, result.ruleScore)
+        val metadata = HistoryPolicy.metadata("test", System.currentTimeMillis(), HistorySource.MANUAL, result)!!
+        assertTrue(metadata.rules.contains(HistoryRule.JOB_DEPOSIT))
+        assertTrue(metadata.rules.contains(HistoryRule.TASK_EARNINGS))
+    }
+    @Test fun legitimateSbiOnlineBankingDomainIsNotFlaggedAsImpersonation() {
+        val result = ThreatEngine().analyse("Log in to your account at https://www.onlinesbi.com/personal/")
+        assertFalse(result.signals.any { it.id == "brand-domain-mismatch" })
     }
     @Test fun visiblePreviewCutOffDoesNotTreatNormalPeriodsAsCutOff() {
         assertTrue(PreviewCompleteness.hasCutOffMarker("Sender\nYour account requires…"))

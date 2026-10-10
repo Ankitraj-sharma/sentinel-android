@@ -6,7 +6,7 @@ internal object EnglishScamRules {
         val topic: Regex, val action: Regex, val weight: Int)
     private fun pattern(value: String) = Regex(value, RegexOption.IGNORE_CASE)
     private val rules = listOf(
-        Rule("job-deposit", "Payment demanded to release task earnings",
+        Rule("task-earnings-deposit", "Payment demanded to release task earnings",
             "A work or task offer asks you to pay before withdrawing earnings. Verify independently before paying.",
             pattern("\\b(?:tasks?|earnings|commission|salary|job)\\b"),
             pattern("\\b(?:pay|deposit|transfer)\\b[^.!?\\n]{0,70}\\b(?:unlock|withdraw|release)\\b[^.!?\\n]{0,40}\\b(?:earnings|salary|commission|balance)\\b"), 40),
