@@ -49,6 +49,7 @@ class MonitorPipelineTest {
         try {
             repository.set(Setting.MONITORING, false)
             repository.set(Setting.WHATSAPP, false); repository.set(Setting.GMAIL, false); repository.set(Setting.SMS, false)
+            repository.set(Setting.TELEGRAM, false)
             repository.set(Setting.ONBOARDING, true); repository.set(Setting.DEMO_SOURCE, true)
             assertTrue(history.setEnabled(true))
             shell("cmd notification allow_listener $component")
@@ -163,6 +164,7 @@ class MonitorPipelineTest {
             repository.set(Setting.MONITORING, false)
             shell("cmd notification disallow_listener $component")
             repository.set(Setting.WHATSAPP, before.whatsapp); repository.set(Setting.GMAIL, before.gmail); repository.set(Setting.SMS, before.sms)
+            repository.set(Setting.TELEGRAM, before.telegram)
             repository.set(Setting.DEMO_SOURCE, before.demoSource); repository.set(Setting.ONBOARDING, before.onboardingComplete)
             repository.set(Setting.MONITORING, before.monitoring)
             if (accessBefore) shell("cmd notification allow_listener $component")
