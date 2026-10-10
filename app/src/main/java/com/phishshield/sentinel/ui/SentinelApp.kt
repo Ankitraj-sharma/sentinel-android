@@ -163,6 +163,7 @@ private fun Settings(settings: UserSettings, onSetting: (Setting, Boolean) -> Un
             color = MaterialTheme.colorScheme.onSurfaceVariant)
         Preference("WhatsApp", "Available notification text", settings.whatsapp) { onSetting(Setting.WHATSAPP, it) }
         Preference("Gmail", "Notification previews; inbox connection is separate", settings.gmail) { onSetting(Setting.GMAIL, it) }
+        Preference("Telegram", "Official app notification previews; no chat history", settings.telegram) { onSetting(Setting.TELEGRAM, it) }
         Preference("SMS", "Available notifications; no direct inbox access", settings.sms) { onSetting(Setting.SMS, it) }
         HorizontalDivider()
         Text("Privacy", style = MaterialTheme.typography.titleLarge)

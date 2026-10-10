@@ -17,12 +17,13 @@ data class UserSettings(
     val saveHistory: Boolean = false,
     val whatsapp: Boolean = true,
     val gmail: Boolean = true,
+    val telegram: Boolean = false,
     val sms: Boolean = true,
     val monitoring: Boolean = false,
     val demoSource: Boolean = false,
 )
 
-enum class Setting { ONBOARDING, DARK_THEME, SAVE_HISTORY, WHATSAPP, GMAIL, SMS, MONITORING, DEMO_SOURCE }
+enum class Setting { ONBOARDING, DARK_THEME, SAVE_HISTORY, WHATSAPP, GMAIL, TELEGRAM, SMS, MONITORING, DEMO_SOURCE }
 
 class SettingsRepository(private val context: Context) {
     private fun key(setting: Setting) = booleanPreferencesKey(setting.name.lowercase())
@@ -35,6 +36,7 @@ class SettingsRepository(private val context: Context) {
             saveHistory = values[key(Setting.SAVE_HISTORY)] ?: false,
             whatsapp = values[key(Setting.WHATSAPP)] ?: true,
             gmail = values[key(Setting.GMAIL)] ?: true,
+            telegram = values[key(Setting.TELEGRAM)] ?: false,
             sms = values[key(Setting.SMS)] ?: true,
             monitoring = values[key(Setting.MONITORING)] ?: false,
             demoSource = values[key(Setting.DEMO_SOURCE)] ?: false,

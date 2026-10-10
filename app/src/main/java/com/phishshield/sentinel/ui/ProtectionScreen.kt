@@ -36,7 +36,7 @@ fun ProtectionScreen(settings: UserSettings, state: MonitorState,
     fun open(intent: Intent) {
         try { context.startActivity(intent) } catch (_: Exception) { setupError = "This device could not open that settings page. Use Android Settings to manage Sentinel permissions." }
     }
-    val selected = settings.whatsapp || settings.gmail || settings.sms || BuildConfig.DEBUG && settings.demoSource
+    val selected = settings.whatsapp || settings.gmail || settings.telegram || settings.sms || BuildConfig.DEBUG && settings.demoSource
     val title = when {
         !settings.monitoring -> "Protection not active"
         !state.accessGranted -> "Notification access needed"
@@ -93,6 +93,7 @@ fun ProtectionScreen(settings: UserSettings, state: MonitorState,
         }, modifier = Modifier.fillMaxWidth()) { Text("Manage background battery settings") }
         Source("WhatsApp", "Personal and Business notification previews", settings.whatsapp) { onSetting(Setting.WHATSAPP, it) }
         Source("Gmail", "Notification previews, not inbox access", settings.gmail) { onSetting(Setting.GMAIL, it) }
+        Source("Telegram", "Official Play Store and telegram.org notification previews; no chat history", settings.telegram) { onSetting(Setting.TELEGRAM, it) }
         Source("SMS", "Current default SMS app notifications, not inbox access", settings.sms) { onSetting(Setting.SMS, it) }
         if (BuildConfig.DEBUG) Source("Synthetic demo source", "Separate fixture app; debug builds only", settings.demoSource) { onSetting(Setting.DEMO_SOURCE, it) }
         HorizontalDivider()

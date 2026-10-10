@@ -73,6 +73,7 @@ class SentinelNotificationListener : NotificationListenerService() {
                 val historySource = when (preview.owner) {
                     "com.whatsapp", "com.whatsapp.w4b" -> HistorySource.WHATSAPP
                     "com.google.android.gm" -> HistorySource.GMAIL
+                    "org.telegram.messenger", "org.telegram.messenger.web" -> HistorySource.TELEGRAM
                     demoPackage(this@SentinelNotificationListener) -> HistorySource.SYNTHETIC_DEMO
                     else -> HistorySource.SMS
                 }
@@ -80,6 +81,7 @@ class SentinelNotificationListener : NotificationListenerService() {
                     val source = when (preview.owner) {
                         "com.whatsapp", "com.whatsapp.w4b" -> "WhatsApp"
                         "com.google.android.gm" -> "Gmail"
+                        "org.telegram.messenger", "org.telegram.messenger.web" -> "Telegram"
                         demoPackage(this@SentinelNotificationListener) -> "Synthetic demo"
                         else -> "SMS"
                     }
@@ -106,6 +108,7 @@ class SentinelNotificationListener : NotificationListenerService() {
         val packages = buildSet {
             if (next.whatsapp) { add("com.whatsapp"); add("com.whatsapp.w4b") }
             if (next.gmail) add("com.google.android.gm")
+            if (next.telegram) addAll(TelegramSources.packages)
             if (next.sms) Telephony.Sms.getDefaultSmsPackage(applicationContext)?.let(::add)
             if (BuildConfig.DEBUG && next.demoSource) add(demoPackage(this@SentinelNotificationListener))
         }

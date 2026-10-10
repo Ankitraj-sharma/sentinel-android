@@ -2,7 +2,8 @@ package com.phishshield.sentinel.engine
 
 enum class HistorySource(val label: String) {
     MANUAL("Manual input"), SHARED_TEXT("Shared text"), QR_CAMERA("QR camera"), QR_IMAGE("QR image"),
-    WHATSAPP("WhatsApp preview"), GMAIL("Gmail preview"), SMS("SMS preview"), SYNTHETIC_DEMO("Synthetic demo preview")
+    WHATSAPP("WhatsApp preview"), GMAIL("Gmail preview"), SMS("SMS preview"), SYNTHETIC_DEMO("Synthetic demo preview"),
+    TELEGRAM("Telegram preview")
 }
 enum class HistoryRule(val code: String, val label: String) {
     SECRET("credential-request", "Request to disclose a secret"), URGENCY("urgency", "Pressure to act quickly"),
