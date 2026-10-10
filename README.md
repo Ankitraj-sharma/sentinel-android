@@ -13,6 +13,8 @@ Notification access does not provide complete access to private chats or inboxes
 
 ## Status
 
+Sentinel 0.7.3 adds a non-debuggable universal release APK with a permanent distribution signing key. Download the APK from [GitHub Releases](https://github.com/ius-sharma/sentinel-android/releases/tag/v0.7.3), rather than Actions test artifacts. See [installation, signing and update guidance](docs/release-distribution.md). Android 8.0+ is required; device restrictions can still prevent sideloading.
+
 Sentinel 0.7.2 applies the owner's neon-green shield logo to launcher and in-app branding, with matching green/navy themes. The original PNG is bundled unchanged; the notification icon uses an adapted monochrome silhouette.
 
 Sentinel 0.7.1 adds visible foreground background protection, safe replacement of detected source notifications and clearer warning copy. The user confirmed live SMS detection after removing the app from Recents. See [background verification and limits](docs/background-protection.md).
