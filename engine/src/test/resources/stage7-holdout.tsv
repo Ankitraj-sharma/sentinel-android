@@ -1,0 +1,41 @@
+id	label	text
+H001	SCAM	Your bank account will be frozen in 30 minutes. Open https://verify-bank.example.test and enter your password and SMS code to keep access.
+H002	SCAM	Congratulations, your phone number won a $5,000 shopping prize. Pay the $49 release fee by gift card and send us a photo of the code.
+H003	SCAM	This is your manager on my new number. I need you to buy six gift cards now and send me the redemption numbers; keep this confidential until the meeting ends.
+H004	SCAM	Double your savings in seven days with our guaranteed crypto pool. Send coins to my wallet today; there is no risk and no need for paperwork.
+H005	SCAM	Your parcel is waiting at customs. Pay a small clearance charge at https://parcel-payment.example.test and provide your card number, expiry date, and security code.
+H006	SCAM	I accidentally sent you a payment. Please refund me through this separate transfer link before the pending payment clears.
+H007	SCAM	A security breach was detected on your laptop. Install our remote access app and read the connection code to this support agent so we can protect your bank funds.
+H008	SCAM	Your tax refund is approved. Reply with your online banking login and one-time password so our refund officer can deposit the money.
+H009	SCAM	We can offer you a remote data entry job immediately. Before receiving your first assignment, transfer $200 to my personal account for mandatory training.
+H010	SCAM	I am an overseas officer holding an inheritance in your name. Send your passport scan and a processing payment today to release the estate.
+H011	SCAM	Your electricity will be disconnected tonight unless you pay this bill with cryptocurrency. Our emergency collection wallet is available by reply.
+H012	SCAM	Your marketplace buyer has paid, but you must enter your debit card details at https://seller-activate.example.test to unlock the incoming money.
+H013	SCAM	I love you and cannot video call because my camera is broken. Please wire money to my travel agent today so I can finally visit you.
+H014	SCAM	You are eligible for a government grant without applying. Send a mobile wallet payment for the activation fee and keep this offer private.
+H015	SCAM	Our exchange recovered your stolen cryptocurrency. First send us 10 percent of the recovered balance to verify ownership, then we will release it.
+H016	SCAM	Your social media profile violates our policy. To avoid deletion, reply with your password and the recovery codes from your account settings.
+H017	SCAM	I have private footage of you and will send it to everyone unless you pay Bitcoin within twelve hours. Do not contact anyone about this.
+H018	SCAM	We printed a refund check for more than your purchase by mistake. Deposit it and immediately wire the difference to our accountant before the bank finishes reviewing it.
+H019	SCAM	A supplier changed its bank account just before your invoice is due. Skip the usual verification call and send the full payment to the account in this message urgently.
+H020	SCAM	Join our exclusive trading group: profits of 15 percent every day are guaranteed. You must recruit two paying members before you can withdraw your earnings.
+H021	BENIGN	Never share your banking password, one-time password, or recovery codes with anyone, including a caller claiming to be from the bank.
+H022	BENIGN	If a message says your account will close, open the bank app yourself or call the number on your card. Do not use the message's link.
+H023	BENIGN	Your order has shipped. You can view tracking details by opening the store app and selecting your purchase history.
+H024	BENIGN	The library book you borrowed is due Friday. Renew it through the library website you normally use or return it at the front desk.
+H025	BENIGN	Thank you for entering the school raffle. Winners will collect prizes at the assembly; nobody will be asked to pay a fee or buy a gift card.
+H026	BENIGN	The finance team received a request to change a vendor's payment account. We will verify it using the vendor's previously recorded telephone number before paying.
+H027	BENIGN	Investment returns are uncertain and you can lose money. Read the risk statement and consult an independent adviser before making a decision.
+H028	BENIGN	Our customer support team will never ask you to install remote access software or move money to a safe account.
+H029	BENIGN	I received a suspicious prize message asking for a release fee. I reported it and did not send any money.
+H030	BENIGN	Your electricity bill is available in your existing customer portal. Contact the billing office listed on your previous statement if anything looks wrong.
+H031	BENIGN	The job interview is scheduled for Tuesday at 10 a.m. There is no application or training fee; please bring a copy of your resume.
+H032	BENIGN	To reset your password, use the account recovery option on the official app. Keep the verification code private and enter it only in the recovery screen you opened.
+H033	BENIGN	Dad, please call me when you get home. I want to check whether the message from an unknown number claiming to be you is real.
+H034	BENIGN	We identified an accidental duplicate charge and refunded it to your original payment method. No further payment or account information is needed.
+H035	BENIGN	The community fundraiser accepts optional donations in person at the registered charity office. Participation is not required to receive assistance.
+H036	BENIGN	Please review the attached invoice against the signed contract. Use the approved payment details already stored in our accounting system.
+H037	BENIGN	Our fraud awareness workshop covers romance scams, fake inheritances, and cryptocurrency recovery fees. Register at the community center reception.
+H038	BENIGN	A buyer asked me to follow a link to receive payment. I declined and will check my balance directly in the marketplace app before sending the item.
+H039	BENIGN	The tax office reminder says to check filing deadlines through the official government portal. It does not request passwords or payment through this message.
+H040	BENIGN	There is a security update for the laptop. Install it through the operating system settings when convenient; no support agent needs access to your banking account.

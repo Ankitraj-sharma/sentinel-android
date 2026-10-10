@@ -1,0 +1,25 @@
+id	label	text
+U001	SCAM	Your wallet needs synchronization after our upgrade. Type all twelve seed words into the recovery page we sent to prevent permanent loss.
+U002	SCAM	I represent the court and can cancel your arrest warrant today. Send prepaid voucher numbers immediately; visiting the courthouse will make the penalty worse.
+U003	SCAM	A scholarship has been reserved for you without an application. Transfer the reservation deposit to this personal account before midnight to claim it.
+U004	SCAM	The apartment is yours if you wire the security deposit now. I am overseas, so you cannot view the property or meet anyone until after payment.
+U005	SCAM	We are testing a new payroll process. Send your employee portal password and authentication code to this chat so I can update your salary account.
+U006	SCAM	You have been selected for a free holiday package. To obtain the tickets, buy three digital gift vouchers and reply with their PINs.
+U007	SCAM	My trading robot earns a fixed daily income with zero losses. Deposit today and pay the withdrawal clearance charge when your balance grows.
+U008	SCAM	A police investigator requires your savings to be transferred to a protected account. Stay on the phone and do not tell your bank why you are moving it.
+U009	SCAM	The concert tickets are available only through my private link. Send an irreversible transfer before I show proof that I own them.
+U010	SCAM	Your email storage is full and incoming mail will be deleted. Reply with your login password so our administrator can increase the limit.
+U011	SCAM	I sent a screenshot showing your item payment. Ship it now even if your account shows no money; the payment will appear only after delivery.
+U012	SCAM	Our charity can guarantee priority access to disaster aid. Pay the registration fee to my wallet and send a photo of both sides of your bank card.
+U013	BENIGN	The security team asks everyone to keep wallet seed phrases offline. No employee will request those words in a form, call, or chat.
+U014	BENIGN	A caller threatened arrest unless I bought vouchers. I ended the call and contacted the courthouse using its published number.
+U015	BENIGN	Scholarship applications open next month. Submit the school form through the student portal; applying is free and awards follow committee review.
+U016	BENIGN	You may view the apartment Saturday before deciding. The deposit is due after the lease is signed and the landlord's identity is verified.
+U017	BENIGN	To change payroll details, open the employee portal from your saved bookmark. Human resources does not need your password or authentication codes.
+U018	BENIGN	Our travel club is discussing holiday options tonight. Bring questions about the itinerary and cancellation terms; no payment is required to attend.
+U019	BENIGN	Past performance does not guarantee future investment results. Compare fees and consider whether you can afford a loss before investing.
+U020	BENIGN	If someone tells you to transfer savings into a protected account, disconnect and call your bank through its official app or card number.
+U021	BENIGN	I listed two concert tickets on the venue's authorized resale platform. Payment and ticket transfer both take place through that platform.
+U022	BENIGN	Your mailbox is near its storage limit. Review large attachments in your account settings; support will never ask you to send your password.
+U023	BENIGN	I will hold the item until the payment is visible in my account. A screenshot from the buyer is not confirmation that funds arrived.
+U024	BENIGN	Disaster relief registration is free at the municipal assistance desk. Staff will not ask for gift cards or your bank card security code.

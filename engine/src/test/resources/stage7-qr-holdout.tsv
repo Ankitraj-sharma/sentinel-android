@@ -1,0 +1,13 @@
+id	label	text
+Q001	SCAM	https://bank.example.test@credential-collector.example.test/login
+Q002	SCAM	https://government.example.test@refund-harvester.example.test/verify-tax-account
+Q003	SCAM	https://parcel.example.test@card-capture.example.test/pay-customs
+Q004	SCAM	https://bank.example.test.login-security.example.test/enter-password-and-otp
+Q005	SCAM	https://government.example.test.grant-release.example.test/pay-activation-fee
+Q006	SCAM	https://marketplace.example.test.seller-unlock.example.test/submit-card-security-code
+Q007	BENIGN	https://library.example.test/catalog
+Q008	BENIGN	https://school.example.test/events/open-day
+Q009	BENIGN	https://museum.example.test/visit/accessibility
+Q010	BENIGN	https://community.example.test/workshops/fraud-awareness
+Q011	BENIGN	https://store.example.test/help/returns
+Q012	BENIGN	https://city.example.test/services/recycling-calendar

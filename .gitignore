@@ -30,3 +30,4 @@ Desktop.ini
 .tools/
 .gradle-local/
 artifacts/
+engine/bin/
